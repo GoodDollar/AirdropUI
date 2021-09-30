@@ -44,7 +44,7 @@ const buildTree = async () => {
   merkleTree = new MerkleTree(elements, true);
 
   const calcMerkleRoot = merkleTree.getRoot().toString("hex");
-  console.log("merkleroots:", {
+  console.log("merkleroots1:", {
     fromFile: merkleRoot,
     calculated: calcMerkleRoot
   });
