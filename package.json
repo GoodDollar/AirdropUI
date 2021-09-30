@@ -1,0 +1,23 @@
+{
+  "name": "good-airdrop-helper",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start",
+    "post-update": "yarn upgrade --latest"
+  },
+  "dependencies": {
+    "@emotion/react": "11.4.1",
+    "@emotion/styled": "11.3.0",
+    "@mui/icons-material": "5.0.0-rc.0",
+    "@mui/material": "5.0.0-rc.0",
+    "merkle-tree-solidity": "1.0.8",
+    "next": "latest",
+    "react": "17.0.2",
+    "react-dom": "17.0.2"
+  },
+  "license": "MIT",
+  "keywords": [],
+  "description": ""
+}
