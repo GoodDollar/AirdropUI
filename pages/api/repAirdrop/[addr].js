@@ -58,17 +58,18 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `warming tree cache` });
   }
   let { addr } = req.query;
-  addr = addr.toLowerCase();
   if (DEBUG) {
     const totalAddrs = Object.keys(treeDB).length;
     console.log({ totalAddrs, first: Object.entries(treeDB)[0] });
   }
-  const addrData = treeDB[addr];
+
+  const addrData = treeDB[addr] || treeDB[addr.toLowerCase()];
   if (!addrData) {
     return res
       .status(400)
       .json({ error: `address ${addr} does not exists in tree` });
   }
+
   const proofFor = Buffer.from(addrData.hash.slice(2), "hex");
 
   const proof = merkleTree.getProof(proofFor);
