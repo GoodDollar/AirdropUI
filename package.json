@@ -4,8 +4,8 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
-    "start": "next start",
-    "post-update": "yarn upgrade --latest"
+    "post-update": "yarn upgrade --latest",
+    "start": "next start -p $PORT"
   },
   "dependencies": {
     "@emotion/react": "11.4.1",
