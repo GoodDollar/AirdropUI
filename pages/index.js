@@ -189,6 +189,24 @@ export default function SignIn() {
                 />
               </ListItem>
             </List>
+            <Grid columns={1} container justifyContent={"center"}>
+              <Grid item xs={12} textAlign={"center"}>
+                <Link
+                  href="https://medium.com/@GoodDollarHQ/introducing-the-gooddao-gooddollar-governance-d6f4f6a5e822"
+                  variant="body2"
+                >
+                  {"Read more here"}
+                </Link>
+              </Grid>
+              <Grid item xs={12} textAlign={"center"}>
+                <Link
+                  href="https://www.gooddollar.org/good-governance-distribution-results-from-the-snapshot/"
+                  variant="body2"
+                >
+                  {"and here"}
+                </Link>
+              </Grid>
+            </Grid>
           </Paper>
           {data ? <AirdropData {...data} /> : null}
           <Box
@@ -216,16 +234,6 @@ export default function SignIn() {
             >
               Check Eligibility
             </Button>
-            <Grid container justifyContent={"center"}>
-              <Grid item>
-                <Link
-                  href="https://medium.com/@GoodDollarHQ/introducing-the-gooddao-gooddollar-governance-d6f4f6a5e822"
-                  variant="body2"
-                >
-                  {"Don't know what the GoodDAO is? click here"}
-                </Link>
-              </Grid>
-            </Grid>
           </Box>
         </Box>
         <Copyright sx={{ mt: 8, mb: 4 }} />
