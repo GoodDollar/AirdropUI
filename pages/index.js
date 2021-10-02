@@ -13,11 +13,14 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
 import Tooltip from "@mui/material/Tooltip";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
+import StarIcon from "@mui/icons-material/Star";
+
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
@@ -154,6 +157,39 @@ export default function SignIn() {
           <Typography component="h1" variant="h5">
             GOOD Airdrop
           </Typography>
+          <Paper>
+            <List>
+              <ListItem>
+                <ListItemIcon>
+                  <StarIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText
+                  fontSize="medium"
+                  primary={"GOOD tokens are non transferable"}
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <StarIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    "GOOD tokens are expected to have a market value of 0$"
+                  }
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <StarIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    "GOOD tokens will be minted at a rate of 96M per year"
+                  }
+                />
+              </ListItem>
+            </List>
+          </Paper>
           {data ? <AirdropData {...data} /> : null}
           <Box
             component="form"
