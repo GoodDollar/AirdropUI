@@ -26,6 +26,25 @@ import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
+// Claim
+import Claim from "./claim/claim";
+import IneligibleAddress from "./claim/ineligible.js";
+
+
+// Temporary solution for loading the contract ABI (Eth and Fuse GoodDollar contract)
+export async function getStaticProps(){
+  let fs = require('fs');
+  let contractABI = JSON.parse(
+      fs.readFileSync(__dirname + "/../../../lib/abiTest.json").toString()
+  );
+
+  return {
+    props: {
+      cabiProp: contractABI
+    }
+  }
+}
+
 async function copyText(text) {
   console.log({ text });
   if ("clipboard" in navigator) {
@@ -129,15 +148,31 @@ const AirdropData = ({ hexProof, proofIndex, addr, reputationInWei }) => {
     </Box>
   );
 };
-export default function SignIn() {
+export default function SignIn({cabiProp}) {
   const [data, setData] = useState();
+
+  // for triggering the dialog
+  const [diaOpen, setOpen] = useState(false);
+  const [diaNoGood, setErrorOpen] = useState(false);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const addr = event.currentTarget.wallet.value;
-    const result = await fetch(`/api/repAirdrop/${addr}`).then((_) => _.json());
+    const result = await fetch(`/api/repAirdrop/${addr}`)
+                   .then((_) => _.json());
     console.log({ result });
     setData(result);
+
+    result.error ? setErrorOpen(true) : setOpen(true);
   };
+
+  const handleClose = (value) => {
+    setOpen(false);
+  }
+
+  const handleErrorClose = (value) => {
+    setErrorOpen(false);
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -238,6 +273,36 @@ export default function SignIn() {
         </Box>
         <Copyright sx={{ mt: 8, mb: 4 }} />
       </Container>
+
+      {/* Claim-Logic Below */}
+      <Container component="claim" maxWidth="xs"
+        sx={{
+          position: "absolute",
+          top: 0,
+          right: "230px",
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+
+        }}>
+        <Box>
+          { data ? 
+            data.error ?
+                <IneligibleAddress open={diaNoGood} 
+                                   onClose={handleErrorClose}></IneligibleAddress>
+            :
+            data.addr ?
+            // the claim dialog 
+              <Claim cabiProp={cabiProp} 
+                      proofData={data}
+                      open={diaOpen}
+                      onClose={handleClose}></Claim>
+              : null
+              : null }
+        </Box>
+      </Container>
+      {/* End of Claim-Logic */}
     </ThemeProvider>
   );
 }
