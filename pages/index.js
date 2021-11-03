@@ -273,7 +273,6 @@ export default function SignIn({cabiProp}) {
         </Box>
         <Copyright sx={{ mt: 8, mb: 4 }} />
       </Container>
-
       {/* Claim-Logic Below */}
       <Container component="claim" maxWidth="xs"
         sx={{
@@ -289,17 +288,18 @@ export default function SignIn({cabiProp}) {
         <Box>
           { data ? 
             data.error ?
-                <IneligibleAddress open={diaNoGood} 
-                                   onClose={handleErrorClose}></IneligibleAddress>
+              <IneligibleAddress open={diaNoGood} 
+                                  onClose={handleErrorClose}></IneligibleAddress>
             :
             data.addr ?
             // the claim dialog 
-              <Claim cabiProp={cabiProp} 
-                      proofData={data}
-                      open={diaOpen}
-                      onClose={handleClose}></Claim>
+            <Claim cabiProp={cabiProp} 
+                   proofData={data}
+                   open={diaOpen}
+                   onClose={handleClose}></Claim>
               : null
-              : null }
+              : null 
+          }
         </Box>
       </Container>
       {/* End of Claim-Logic */}
