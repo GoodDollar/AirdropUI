@@ -4,9 +4,9 @@ import DialogContent from "@mui/material/DialogContent";
 import React, { useState, useEffect } from 'react';
 
 export default function IneligibleAddress(props) {
-  const [sorryMessage, setMessage] = useState('Sorry, this address does not have any GOOD tokens to claim. Try another');
+  const [sorryMessage] = useState('Sorry, this address does not have any GOOD tokens to claim. Try another');
   const {onClose, open} = props;
-  const [onInit, setInit] = useState("init");
+  const [onInit] = useState("init");
 
   useEffect(() => {
     setTimeout(() => {

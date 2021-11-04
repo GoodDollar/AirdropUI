@@ -17,7 +17,6 @@ const infuraConfig = require('../../private/infura.config.js');
 const Web3 = require('web3');
 let testUrl = infuraConfig.infuraUrl;
 
-
 const SwitchAndConnectButton = styled(Button)({
   height: "100px",
   width: "100px",
@@ -50,15 +49,14 @@ export default function Claim(props) {
   const [connectedProvider, setConnectedProvider] = useState(null);
   const [errorMessage, setError] = useState(null);
   const [connectedChain, setConnectedChain] = useState(null);
-  const [initProvider, setInitProvider] = useState('init');
+  const [initProvider] = useState('init');
   const [chainId, setChainId] = useState(null);
   const {onClose, open} = props;
   const [query, setQuery] = useState('init');
   const [gRep, setGRep] = useState(null);
   const [providerInstance, setProviderInstance] = useState(null);
 
-  let processingQuery = ['cancelled', 'wrong-address', 'pending'].join(":");
-
+  let queryConnectionErrors = ['cancelled', 'wrong-address', 'pending'].join(":");
 
   // This should be with one useEffect?
   
@@ -87,7 +85,6 @@ export default function Claim(props) {
   const providerInit = useCallback((providerName, provInstanceRef) => {
     if (providerName == "MM") {
       let supportedChains = ['0x7a', '0x1', 1, 122].join(':');
-      // Temporary, events might not be properly initialized?
           
       // Docs state that a window reload is recommended?
       provInstanceRef.eth.currentProvider.on('chainChanged', (chainId) => {
@@ -106,7 +103,6 @@ export default function Claim(props) {
         }
       });
 
-
       // TODO: Handle connection of multiple accounts
       provInstanceRef.eth.currentProvider.on('accountsChanged', (res) => {
         if (res.length === 0) {
@@ -115,13 +111,13 @@ export default function Claim(props) {
       });
     } else {
       provInstanceRef.on("accountsChanged", (accounts) => {
-        console.log("wc accounts changed");
+        // runs on every connection through the WC provider
         console.log('wc accounts changed --> accounts -->', accounts);
       });
 
       provInstanceRef.on("connect", () => {
+        // after clicking connect button in wallet
         console.log('wc connect');
-        // Might not be necessary?
       });
 
       provInstanceRef.on("chainChanged", (chainId) => {
@@ -131,36 +127,47 @@ export default function Claim(props) {
 
       provInstanceRef.on("disconnect", (code, res) =>{
         // code 1000 == disconnect
-        console.log('wc disconnect');
         disconnect();
       });
     }
   }, [initProvider]);
 
-  // Check if user is already connected with metamask on initialization.
-  // TODO: Check for Wallet-Connect access token
+  // Check if user is already connected with metamask/wallet-connect on initialization.
   useEffect(() => {
     setClaimAddress(props.proofData.addr);
     let gRep = props.proofData.reputationInWei / 1e18;
     setGRep(gRep);
 
+    let providerName;
     let web3 = new Web3(Web3.givenProvider || testUrl);
-    // const Wc3 = new WalletConnectProvider({
-    //     infuraId: infuraConfig.infuraId
-    // });
+    const Wc3 = new WalletConnectProvider({
+      infuraId: infuraConfig.infuraId
+    });
 
-  web3.eth.getAccounts().then((res) => {
-    if (res.length !== 0){
-      let providerName = "MM";
-      setConnectedAddress(res[0]);
-      setProviderInstance(web3);
-      providerInit(providerName, providerInstanceRef.current);
+    let tryWalletConnect = Wc3.wc.accounts;
+    const tryMetamask = web3.eth.getAccounts().then((res) => {
+      if (res.length !== 0){
+        console.log("trymetamask res -->", res);
+        return res[0];
+      }
+    });
+
+    if (tryWalletConnect.length > 0){
+      providerName = "WC";
+      setConnectedAddress(tryWalletConnect[0]);
       connectForClaim(providerName);
+    } else {
+      tryMetamask.then((res) => {
+        if (res) {
+          providerName = "MM";
+          setConnectedAddress(res);
+          setProviderInstance(web3);
+          providerInit(providerName, providerInstanceRef.current);
+          connectForClaim(providerName);
+        }
+      });
     }
-  });
-
-  // Check here if there is an existing Wallet-Connect connection
-  // TODO: WC and Metamask should not? be able to be both connected
+    // TODO: WC and Metamask should not? be able to be both connected
   }, [providerInit]);
 
   const connectForClaim = async (providerName) => {
@@ -175,9 +182,6 @@ export default function Claim(props) {
     setQuery('loading-connect');
 
     let conAddr;
-
-    // console.log("during loading providerInstance -->", providerInstance);
-    // console.log('during loading providerInstanceRef -->', providerInstanceRef.current);
 
     if (!providerInstanceRef.current && providerName == "MM"){
       // user is not connected yet
@@ -194,6 +198,10 @@ export default function Claim(props) {
       });
       setProviderInstance(Wc3);
       providerInit(providerName, Wc3);
+
+      // TODO: If user closes modal from the dapp, a proper error is returned
+      //       If user declines the connection from wallet, nothing returns, and below promise return
+      //       stays pending
       conAddr = walletConnect(providerName, Wc3);
     }
 
@@ -205,6 +213,7 @@ export default function Claim(props) {
                   'Please disconnect first, then retry with the eligible address.');
         setQuery('wrong-address');
       } else {
+        console.log('successfully connected');
         success(res, providerName);
       }
     }).catch((err) => {
@@ -228,6 +237,8 @@ export default function Claim(props) {
   }
 
   const addFuseNetwork = async(id) => {
+    setQuery("loading-connect");
+
     providerInstanceRef.current.eth.currentProvider.request({
       method: 'wallet_addEthereumChain',
       params: [{
@@ -243,36 +254,36 @@ export default function Claim(props) {
         }],
     }).catch((err) => {
       switch (err.code) {
-          case -32002:
-              pending();
-              break;
-          case 4001:
-              // loading-connect not added yet for this to work
-              // cancelled();
-              break;
+        case -32002:
+          pending();
+          break;
+        case 4001:
+          cancelled();
+          break;
       }
     });
   }
 
   // Switching of network by button
-  const switchNetwork = async (chainId) => {  
-    // let web3 = new Web3(Web3.givenProvider || testUrl);
-    providerInstanceRef.current.eth.currentProvider.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: chainId}]
-    }).catch((err) => {
-      switch (err.code) {
-        case 4902:
-            addFuseNetwork(chainId);
-            break;
-        case -32002:
-            pending();
-            break;
-        case 4001:
-            cancelled();
-            break;
-      }
-    });
+  const switchNetwork = async (chainId) => {
+    if (connectedProvider !== "WC"){
+      providerInstanceRef.current.eth.currentProvider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: chainId}]
+      }).catch((err) => {
+        switch (err.code) {
+          case 4902:
+              addFuseNetwork(chainId);
+              break;
+          case -32002:
+              pending();
+              break;
+          case 4001:
+              cancelled();
+              break;
+        }
+      });
+    }  
   }
 
   // Where to get the abi for the new contract?
@@ -328,6 +339,7 @@ export default function Claim(props) {
     setConnectedAddress(null);
     setConnectedProvider(null);
     setConnectedChain(null);
+    setProviderInstance(null);
     setChainId(null);
     setError("you have disconnected from the dapp");
     setQuery("cancelled");
@@ -360,7 +372,7 @@ export default function Claim(props) {
             query === 'loading-connect' ? 
               <CircularProgress color="secondary" sx={{marginTop:"20px"}} /> 
             :   
-              processingQuery.indexOf(query) !== -1 ?
+              queryConnectionErrors.indexOf(query) !== -1 ?
                 <ErrorSpan message={errorMessage} />
               :
               <Box sx={{
@@ -386,7 +398,7 @@ export default function Claim(props) {
                   onClick={() => connectForClaim("WC")}></SwitchAndConnectButton>
               </Box>
               : // First Connect, then >>
-                query === 'pending' ?
+                queryConnectionErrors.indexOf(query) !== -1 ?
                   <ErrorSpan message={errorMessage} />
                 :
               <div>
@@ -417,6 +429,8 @@ export default function Claim(props) {
                       backgroundImage: `url('/ethereum.svg')`,
                     }}
                     onClick={() => switchNetwork("0x1")}></SwitchAndConnectButton>
+
+                  {connectedProvider === "WC" ? null :
                   <SwitchAndConnectButton
                     fullWidth
                     variant="contained"
@@ -427,6 +441,7 @@ export default function Claim(props) {
                       backgroundImage: `url('/fuse.svg')`
                     }}
                     onClick={() => switchNetwork("0x7a")}></SwitchAndConnectButton>
+                  }
                 </Box>
                 {
                   query === 'wrong-network' ? 
