@@ -9,7 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import WalletConnectProvider from "@walletconnect/web3-provider";
-
+import ErrorHandler from './ErrorHandler.js';
 import walletConnect, {claimReputation} from '../../lib/connect.serv.js';
 
 const infuraConfig = require('../../private/infura.config.js');
@@ -35,28 +35,21 @@ const SwitchAndConnectButton = styled(Button)({
   }
 });
 
-const ErrorSpan = ({message}) => {
-  return (
-      <Typography variant="span" color="red">
-          {message}
-      </Typography> 
-  );
-}
-
 export default function Claim(props) {
   const [claimAddress, setClaimAddress] = useState(null);
   const [connectedAddress, setConnectedAddress] = useState(null);
   const [connectedProvider, setConnectedProvider] = useState(null);
-  const [errorMessage, setError] = useState(null);
   const [connectedChain, setConnectedChain] = useState(null);
   const [initProvider] = useState('init');
   const [chainId, setChainId] = useState(null);
   const {onClose, open} = props;
-  const [query, setQuery] = useState('init');
+  const [query, setQuery] = useState({status: 'init'});
+  const [error, setError] = useState({status: null, code: null});
   const [gRep, setGRep] = useState(null);
   const [providerInstance, setProviderInstance] = useState(null);
 
-  let queryConnectionErrors = ['cancelled', 'wrong-address', 'pending'].join(":");
+  let queryConnectionErrors = [4001,311,312,-32002,313].join(":");
+  let connectionErrorsTimeout = [4001,311,-32002,313].join(":");
 
   // This should be with one useEffect?
   
@@ -64,6 +57,11 @@ export default function Claim(props) {
   const connectedChainRef = useRef(connectedChain);
   const providerInstanceRef = useRef(providerInstance);
   const claimAddressRef = useRef(claimAddress);
+  const chainIdRef = useRef(chainId);
+
+  useEffect(() => {
+    chainIdRef.current = chainId;
+  }, [chainId]);
   
   useEffect(() => {
     connectedChainRef.current = connectedChain;
@@ -89,24 +87,24 @@ export default function Claim(props) {
       // Docs state that a window reload is recommended?
       provInstanceRef.eth.currentProvider.on('chainChanged', (chainId) => {
         if (supportedChains.indexOf(chainId) !== -1) {
-          setError(null);
-          setQuery('idle');
           setConnectedChain(chainId == "0x7a" ? "Fuse": "Ethereum Mainnet");
           setChainId(chainId == "0x7a" ? 122 : 1);
+          setQuery({status: 'idle'});
+          // setError({status: '', code: null});
         } else {
+          setChainId(chainId);
           let res = {
             connectedChain: connectedChainRef.current,
-            chainId: chainId,
+            chainId: chainIdRef.current,
             connectedAddress: connectedAddressRef.current,
           };
-          wrongNetwork(res, providerName);
+          wrongNetwork(res);
         }
       });
-
       // TODO: Handle connection of multiple accounts
       provInstanceRef.eth.currentProvider.on('accountsChanged', (res) => {
         if (res.length === 0) {
-          disconnect();
+          clearState();
         }
       });
     } else {
@@ -115,10 +113,10 @@ export default function Claim(props) {
         console.log('wc accounts changed --> accounts -->', accounts);
       });
 
-      provInstanceRef.on("connect", () => {
-        // after clicking connect button in wallet
-        console.log('wc connect');
-      });
+      // provInstanceRef.on("connect", () => {
+      //   // after clicking connect button in wallet
+      //   console.log('wc connect');
+      // });
 
       provInstanceRef.on("chainChanged", (chainId) => {
         console.log("wc chainChanged");
@@ -127,7 +125,7 @@ export default function Claim(props) {
 
       provInstanceRef.on("disconnect", (code, res) =>{
         // code 1000 == disconnect
-        disconnect();
+        clearState();
       });
     }
   }, [initProvider]);
@@ -154,6 +152,7 @@ export default function Claim(props) {
 
     if (tryWalletConnect.length > 0){
       providerName = "WC";
+      console.log('try wc');
       setConnectedAddress(tryWalletConnect[0]);
       connectForClaim(providerName);
     } else {
@@ -176,68 +175,95 @@ export default function Claim(props) {
     //     "WC" for WalletConnect
     // }
     if (query !== 'idle') {
-      setQuery('idle');
+      setQuery({status: 'idle', code: null});
     }
 
-    setQuery('loading-connect');
+    setQuery({status: 'loading-connect'});
 
     let conAddr;
-
     if (!providerInstanceRef.current && providerName == "MM"){
       // user is not connected yet
       const web3 = new Web3(Web3.givenProvider || testUrl);
       setProviderInstance(web3);
       providerInit(providerName, web3);
-      conAddr = walletConnect(providerName, web3);
+      conAddr = walletConnect(providerName, web3, claimAddressRef.current);
     } else if (providerInstanceRef.current && providerName == "MM") {
       // user has exisiting MetaMask connection(s)
-      conAddr = walletConnect(providerName, providerInstanceRef.current);
+      conAddr = walletConnect(providerName, providerInstanceRef.current, claimAddressRef.current);
     } else {
+      console.log('wallet connect attempt connect for claim');
       const Wc3 = new WalletConnectProvider({
         infuraId: infuraConfig.infuraId
       });
       setProviderInstance(Wc3);
       providerInit(providerName, Wc3);
-
       // TODO: If user closes modal from the dapp, a proper error is returned
-      //       If user declines the connection from wallet, nothing returns, and below promise return
-      //       stays pending
+      //       If user declines the connection from wallet, nothing returns, 
+      //       and below promise return stays pending
       conAddr = walletConnect(providerName, Wc3);
     }
 
     conAddr.then((res) => {
       // Temp, just for testing Wallet-Connect
-      // if (res.connectedAddress !== claimAddressRef.current && res.connectedAddress !== infuraConfig.TrustWallet) {
       if (res.connectedAddress !== claimAddressRef.current){
-        setError('Sorry, you are not connected to the right address. '+ 
-                  'Please disconnect first, then retry with the eligible address.');
-        setQuery('wrong-address');
-      } else {
-        console.log('successfully connected');
-        success(res, providerName);
-      }
+            console.log('successfully connected');
+            success(res, providerName);
+          } 
     }).catch((err) => {
-      console.log('errorrrr -->', err);
-      if (err.message == 'User closed modal'){
-        err.code = 311;
-      }
-      switch (err.code) {
-        case 4001:
-        case 311: 
-          cancelled();
-          break;
-        case -32002: 
-          pending();
-          break;
-        case 310:
-          wrongNetwork(err, providerName);
-          break;
-      } 
+      console.log('catch"m -->', err.code);
+      err.code == 310 ? 
+        wrongNetwork(err.res) 
+      : 
+        err.message == 'User closed modal' ? err.code = 311 : null;
+        setQuery({status: 'error'});
+        setError({status: '', code: err.code});
+        if (connectionErrorsTimeout.indexOf(err.code) !== -1) {
+          setTimeout(() => {
+            setQuery({action: 'idle', code: null});
+          }, 2500);
+        }
     });
+  }
+  
+  const clearState = () => {
+    // When connecting through ineligible address, message doesn't update
+    setError({status: 'disconnect', code: 313});
+    setQuery({status: 'error'});
+    setConnectedAddress(null);
+    setConnectedProvider(null);
+    setConnectedChain(null);
+    setProviderInstance(null);
+    setChainId(null);
+    setTimeout(() => {      
+      setQuery({status: 'idle'});
+      setError({status: null, code: null});
+    }, 2500);
+  }
+
+  const wrongNetwork = (res) => {
+    //TODO: doesn't show error when already connected to the wrong network
+    // If wallet already connected, set connected state
+    if (query.status !== 'success') {
+      success(res, "MM");
+    };
+    // Then trigger the wrong network error
+    setError({status: 'wrongNetwork', code: 310});
+    setQuery({status: 'error'});
+    setConnectedChain('unsupported');
+    setChainId('0x00');
+  }
+
+  const success = (res, providerName) => {
+    // for wallet connect, don't show switch network buttons
+    setConnectedChain(res.connectedChain);
+    setChainId(res.chainId);
+    setConnectedAddress(res.connectedAddress);
+    setConnectedProvider(providerName);  
+    setQuery({status: 'success'});
   }
 
   const addFuseNetwork = async(id) => {
-    setQuery("loading-connect");
+    setQuery({status: "loading-connect", code: null});
 
     providerInstanceRef.current.eth.currentProvider.request({
       method: 'wallet_addEthereumChain',
@@ -253,14 +279,8 @@ export default function Claim(props) {
           blockExplorerUrls: ['https://explorer.fuse.io']
         }],
     }).catch((err) => {
-      switch (err.code) {
-        case -32002:
-          pending();
-          break;
-        case 4001:
-          cancelled();
-          break;
-      }
+        setQuery({status: 'error'});
+        setError({status: '', code: err.code});
     });
   }
 
@@ -271,16 +291,10 @@ export default function Claim(props) {
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: chainId}]
       }).catch((err) => {
-        switch (err.code) {
-          case 4902:
-              addFuseNetwork(chainId);
-              break;
-          case -32002:
-              pending();
-              break;
-          case 4001:
-              cancelled();
-              break;
+        if (err.code == 4902){
+          addFuseNetwork(chainId);
+        } else {
+          setError({status: null, code: err.code});
         }
       });
     }  
@@ -295,58 +309,6 @@ export default function Claim(props) {
 
   const handleClose = () => {
     onClose();
-  }
-
-  const success = (res, providerName) => {
-    // for wallet connect, don't show switch network buttons
-    setConnectedChain(res.connectedChain);
-    setChainId(res.chainId);
-    setConnectedAddress(res.connectedAddress);
-    setConnectedProvider(providerName);  
-    setQuery('success');  
-  }
-  
-  const wrongNetwork = (res, providerName) => {
-    // When wallet is already connect
-    if (query !== 'success') {
-      success(res, providerName);
-    };
-    setError('Sorry, you seem to be connected to an unsupported network');
-    setConnectedChain('unsupported');
-    setQuery('wrong-network');
-    setChainId('0x00');
-  }
-
-  const pending = () => {
-    setError('There is already an pending confirmation in your MetaMask.');
-    setQuery('pending');
-    setTimeout(() => {
-        setError(null);
-        setQuery('idle');
-    }, 2500);
-  }
-
-  const cancelled = () => {
-    setQuery('cancelled');
-    setError('You cancelled the connection/confirmation, try again!');
-    setTimeout(() => {
-        setError(null);
-        setQuery('idle');
-    }, 2500);
-  }
-
-  const disconnect = () => {
-    setConnectedAddress(null);
-    setConnectedProvider(null);
-    setConnectedChain(null);
-    setProviderInstance(null);
-    setChainId(null);
-    setError("you have disconnected from the dapp");
-    setQuery("cancelled");
-    setTimeout(() => {
-      setError(null);
-      setQuery('idle');
-    }, 2500);
   }
 
   return (
@@ -369,11 +331,11 @@ export default function Claim(props) {
           {claimAddress}
         </Typography>
           { !connectedAddress ?
-            query === 'loading-connect' ? 
+            query.status === 'loading-connect' ? 
               <CircularProgress color="secondary" sx={{marginTop:"20px"}} /> 
             :   
-              queryConnectionErrors.indexOf(query) !== -1 ?
-                <ErrorSpan message={errorMessage} />
+              queryConnectionErrors.indexOf(error.code) !== -1 && query.status == 'error' ?
+                <ErrorHandler action={error}/>
               :
               <Box sx={{
                 marginTop: "20px",
@@ -398,8 +360,8 @@ export default function Claim(props) {
                   onClick={() => connectForClaim("WC")}></SwitchAndConnectButton>
               </Box>
               : // First Connect, then >>
-                queryConnectionErrors.indexOf(query) !== -1 ?
-                  <ErrorSpan message={errorMessage} />
+                queryConnectionErrors.indexOf(error.status) !== -1 ?
+                  <ErrorHandler action={error}/>
                 :
               <div>
                 <div>You are currently connected with address:</div>
@@ -444,8 +406,8 @@ export default function Claim(props) {
                   }
                 </Box>
                 {
-                  query === 'wrong-network' ? 
-                    <ErrorSpan message={errorMessage} />
+                  query.status === 'error' && error.status === "wrongNetwork" ? 
+                    <ErrorHandler action={error}/>
                   :
                   <Box>
                     <Button
