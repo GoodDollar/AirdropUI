@@ -27,7 +27,7 @@ import Paper from "@mui/material/Paper";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 // Claim
-import Claim from "./claim/claim";
+import ClaimDialog from "./claim/claimDialog";
 import IneligibleAddress from "./claim/ineligible.js";
 
 
@@ -293,10 +293,10 @@ export default function SignIn({cabiProp}) {
             :
             data.addr ?
             // the claim dialog 
-            <Claim cabiProp={cabiProp} 
+            <ClaimDialog cabiProp={cabiProp} 
                    proofData={data}
                    open={diaOpen}
-                   onClose={handleClose}></Claim>
+                   onClose={handleClose}></ClaimDialog>
               : null
               : null 
           }

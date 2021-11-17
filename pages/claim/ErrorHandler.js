@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import Typography from "@mui/material/Typography";
 
 const ErrorSpan = ({message}) => {
@@ -12,6 +12,7 @@ const ErrorSpan = ({message}) => {
 export default function ErrorHandler(props) {
   const [errorMessage, setError] = useState(null);
   const [errorInit] = useState('init');
+  const [errorStatus, setErrorStatus] = useState();
 
   let messages = {
     cancelled: 'You cancelled the connection/confirmation, try again!',
@@ -32,22 +33,25 @@ export default function ErrorHandler(props) {
   let withTimeOut = ['cancelled', 'pending', 'disconnect'].join(":");
 
   useEffect(() => {
-    for (const [key, value] of Object.entries(statusCodes)) {
-      if (props.action.code == parseInt(key)){
-        props.action.status = value;
+    console.log('error Handler triggered');
+    console.log('error handler props -->', props);
+    for (const [code, status] of Object.entries(statusCodes)) {
+      if (props.action.code == parseInt(code)){
+        setErrorStatus(status);
         break;
       }
     }
-  }, [errorInit])
+  }, [errorInit]);
 
   useEffect(() => {
-    setError(messages[props.action.status]);
-    if (withTimeOut.indexOf(props.action.status) !== -1) {
+    console.log('errorStatus -->', errorStatus);
+    setError(messages[errorStatus]);
+    if (withTimeOut.indexOf(errorStatus) !== -1) {
       setTimeout(() => {
         setError(null);
       }, 2500);
     }
-  },[]);
+  },[errorStatus]);
 
   return (
     <ErrorSpan message={errorMessage} />
