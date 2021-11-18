@@ -1,7 +1,7 @@
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import React, {useState, useEffect, useCallback, useRef} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 
 import SwitchAndConnectButton from '../../lib/switchConnectButton.js';
 import ErrorHandler from './ErrorHandler.js';
@@ -12,10 +12,8 @@ export default function Claim(props) {
   const [connectedChain, setConnectedChain] = useState(null);
   const [connectedProvider, setConnectedProvider] = useState(null);
   const [chainId, setChainId] = useState(null);
-
   const [query, setQuery] = useState({status: null});
   const [error, setError] = useState({status: null, code: null});
-  const [initProvider] = useState('init');
 
   const connectedAddressRef = useRef(connectedAddress);
   const connectedChainRef = useRef(connectedChain);
@@ -32,75 +30,22 @@ export default function Claim(props) {
   useEffect(() => {
     connectedChainRef.current = connectedChain;
   }, [connectedChain]);
-   
-  // Chain changed triggered both through app-button and manual through wallet
-  const providerInit = useCallback((providerName, provInstanceRef) => {
-    console.log("setting provider events");
-    if (providerName == "MM") {
-      let supportedChains = ['0x7a', '0x1', 1, 122].join(':');
-          console.log('provider.js -- provInstanceRef -->', provInstanceRef);
-      // TODO: Either window reload or a state property so that the event doesn't have multiple instances
-      provInstanceRef.eth.currentProvider.on('chainChanged', (chainId) => {
-        console.log("chain changed meta");
-        if (supportedChains.indexOf(chainId) !== -1) {
-          setConnectedChain(chainId == "0x7a" ? "Fuse": "Ethereum Mainnet");
-          setChainId(chainId == "0x7a" ? 122 : 1);
-          setError({status: '', code: null});
-          setQuery({status: 'idle'});
-        } else {
-          setChainId(chainId);
-          let res = {
-            connectedChain: connectedChainRef.current,
-            chainId: chainIdRef.current,
-            connectedAddress: connectedAddressRef.current,
-          };
-          wrongNetwork(res);
-        }
-      });
-      // TODO: Handle connection of multiple accounts
-      provInstanceRef.eth.currentProvider.on('accountsChanged', (res) => {
-        if (res.length === 0) {
-          clearState();
-        }
-      });
-    } else {
-      provInstanceRef.on("accountsChanged", (accounts) => {
-        // runs on every connection through the WC provider
-        console.log('wc accounts changed --> accounts -->', accounts);
-      });
-
-      // provInstanceRef.on("connect", () => {
-      //   // after clicking connect button in wallet
-      //   console.log('wc connect');
-      // });
-
-      provInstanceRef.on("chainChanged", (chainId) => {
-        console.log("wc chainChanged");
-        // do stuff
-      })
-
-      provInstanceRef.on("disconnect", (code, res) =>{
-        // code 1000 == disconnect
-        clearState();
-      });
-    }
-  }, [initProvider]);
 
   useEffect(() => {
-    console.log('setting state switch . . . -->', props);
-    setProviderInstance(props.currentConnection.providerInstance);
-    setConnectedAddress(props.currentConnection.connectedAddress);
-    setChainId(props.currentConnection.chainId);
-    setConnectedProvider(props.currentConnection.providerName);
-    providerInit(props.currentConnection.providerName, 
-                 props.currentConnection.providerInstance);
-
-    if (props.currentConnection.connectedChain == 'unsupported'){
-      wrongNetwork();
-    } else {
-      setConnectedChain(props.currentConnection.connectedChain);
+    if (props.currentConnection){
+      setProviderInstance(props.currentConnection.providerInstance);
+      setConnectedAddress(props.currentConnection.connectedAddress);
+      setChainId(props.currentConnection.chainId);
+      setConnectedProvider(props.currentConnection.providerName);
+      if (props.currentConnection.connectedChain == 'unsupported'){
+        wrongNetwork();
+      } else {
+        setQuery({status: null});
+        setError({status: null, code: null});
+        setConnectedChain(props.currentConnection.connectedChain);
+      }
     }
-  }, [providerInit]);
+  }, [props]);
 
 
   const addFuseNetwork = async(id) => {
@@ -145,23 +90,6 @@ export default function Claim(props) {
     setQuery({status: 'error'});
     setConnectedChain('unsupported');
     setChainId('0x00');
-  }
-    
-  const clearState = () => {
-    // When connecting through ineligible address, message doesn't update
-    setError({status: 'error', code: 313});
-    setQuery({status: 'error'});
-    setConnectedAddress(null);
-    setConnectedProvider(null);
-    setConnectedChain(null);
-    setProviderInstance(null);
-    setChainId(null);
-    let status = {status: 'error', code: 313};
-    props.setConnection(status);
-    // setTimeout(() => {      
-    //   setQuery({status: 'idle'});
-    //   setError({status: null, code: null});
-    // }, 2500);
   }
 
   // Where to get the abi for the new contract?

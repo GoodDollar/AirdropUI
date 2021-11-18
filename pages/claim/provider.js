@@ -37,37 +37,20 @@ export default function Provider(props) {
   let connectionErrorsTimeout = [4001,311,-32002,313].join(":");
 
   useEffect(() => {
-    console.log("provider props -->", props);
-    if (props.query.status == 'error') { 
+    if (props.query.status == 'disconnect') { 
       disconnect();
     } else {
       let getCurrentConnection = isConnected(props.claimAddress);
       getCurrentConnection.then((res) => {
-        console.log('res -->', res);
         if (res) {
           success(res);
         }
+      }).catch((err) => {
+        errorInit(err);
       });
     }
   }, [initProvider]);
-
-
-
-  const disconnect = () => {
-    console.log("disconnecting . . .");
-    setTimeout(() => {
-      setQuery({status: 'error'});
-      setError({status: props.query.status, code: props.query.code});
-    }, 1);
-
-    if (connectionErrorsTimeout.indexOf(props.query.code) !== -1) {
-      setTimeout(() => {
-        setQuery({action: 'idle', code: null});
-        setError({status: null, code: null});
-      }, 2500);
-    }
-  }
-
+  
   const connectForClaim = async (providerName) => {
     // Provider {
     //     "MM" for METAMASK
@@ -81,11 +64,7 @@ export default function Provider(props) {
     if (!providerInstanceRef.current && providerName == "MM"){
       // user is not connected yet
       const web3 = new Web3(Web3.givenProvider || testUrl);
-      // providerInit(providerName, web3);
       conAddr = walletConnect(providerName, web3, claimAddressRef.current);
-    // } else if (providerInstanceRef.current && providerName == "MM") {
-    //   // user has exisiting MetaMask connection(s)
-    //   conAddr = walletConnect(providerName, providerInstanceRef.current, claimAddressRef.current);
     } else {
       console.log('wallet connect attempt connect for claim');
       const Wc3 = new WalletConnectProvider({
@@ -100,42 +79,71 @@ export default function Provider(props) {
     }
 
     conAddr.then((res) => {
-      // Temp for testing wallet-connect
-      // if (res.connectedAddress !== claimAddressRef.current){
-        console.log('successfully connected');
-        success(res);
-      // } 
+      console.log('successfully connected');
+      success(res);
     }).catch((err) => {
       console.log('catch"m -->', err.code);
-      err.code == 310 ? 
-      // TODO: doesnt work properly for initializing events after
-        wrongNetwork(err.res) 
-      : 
-        err.message == 'User closed modal' ? err.code = 311 : null;
-        setQuery({status: 'error'});
-        setError({status: '', code: err.code});
-        if (connectionErrorsTimeout.indexOf(err.code) !== -1) {
-          setTimeout(() => {
-            setQuery({action: 'idle', code: null});
-            setError({status: null, code: null});
-          }, 2500);
-        }
+      errorInit(err);
     });
   }
 
   const wrongNetwork = (res) => {
-    //TODO: doesn't show error when already connected to the wrong network
-    // If wallet already connected, set connected state
-    console.log('wrong network provider res -->', res);
     if (query.status !== 'success') {
       success(res);
     };
   }
 
+  const disconnect = () => {
+    console.log("disconnecting . . .");
+    setProviderInstance(null);
+    setTimeout(() => {
+      setQuery({status: 'error'});
+      setError({status: props.query.status, code: props.query.code});
+    }, 1);
+
+    if (connectionErrorsTimeout.indexOf(props.query.code) !== -1) {
+      setTimeout(() => {
+        setQuery({action: 'idle', code: null});
+        setError({status: null, code: null});
+      }, 2500);
+    }
+  }
+
+  const wrongAddress = (res) => {
+    setProviderInstance(res.providerInstance);
+    if (res.providerName == "MM"){
+      res.providerInstance.currentProvider.on('accountsChanged', (res) => {
+        providerInstanceRef.current.currentProvider.removeAllListeners();
+      });
+    } else {
+      res.providerInsance.on("disconnect", (code, res) =>{
+        providerInstanceRef.current.removeAllListeners();
+      });
+    }
+    disconnect();
+  }
+
+  const errorInit = (err) => {
+    console.log('catch"m -->', err);
+    err.code == 310 ? 
+      wrongNetwork(err.res) 
+    :
+    err.code == 312 ?
+      wrongAddress(err.res)
+    :
+      err.message == 'User closed modal' ? err.code = 311 : null;
+      setQuery({status: 'error'});
+      setError({status: '', code: err.code});
+      if (connectionErrorsTimeout.indexOf(err.code) !== -1) {
+        setTimeout(() => {
+          setQuery({action: 'idle', code: null});
+          setError({status: null, code: null});
+        }, 2500);
+      }
+  }
 
   const success = (res) => {
     setQuery({status: 'success'});
-    console.log('props after success -->',props);
     props.setConnection(res);
     // bubble back to parent --> claim
   }
@@ -147,9 +155,6 @@ export default function Provider(props) {
     queryConnectionErrors.indexOf(error.code) !== -1 && queryRef.current.status == 'error' ?
       <ErrorHandler action={error}/> 
     :
-    // props.query.status == 'error' ?
-    //   <ErrorHandler action={error}/>
-    // :
     <Box sx={{
       marginTop: "20px",
       display: "flex",
