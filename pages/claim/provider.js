@@ -79,10 +79,10 @@ export default function Provider(props) {
     }
 
     conAddr.then((res) => {
-      console.log('successfully connected');
+      // console.log('successfully connected');
       success(res);
     }).catch((err) => {
-      console.log('catch"m -->', err.code);
+      // console.log('catch"m -->', err.code);
       errorInit(err);
     });
   }
@@ -114,17 +114,18 @@ export default function Provider(props) {
     if (res.providerName == "MM"){
       res.providerInstance.currentProvider.on('accountsChanged', (res) => {
         providerInstanceRef.current.currentProvider.removeAllListeners();
+        disconnect();
       });
     } else {
       res.providerInsance.on("disconnect", (code, res) =>{
         providerInstanceRef.current.removeAllListeners();
+        disconnect();
       });
     }
-    disconnect();
   }
 
   const errorInit = (err) => {
-    console.log('catch"m -->', err);
+    // console.log('catch"m -->', err);
     err.code == 310 ? 
       wrongNetwork(err.res) 
     :
@@ -142,10 +143,12 @@ export default function Provider(props) {
       }
   }
 
+  /* 
+   * setConnection returns User to ClaimDialog and Provider gets unmounted 
+   */
   const success = (res) => {
     setQuery({status: 'success'});
-    props.setConnection(res);
-    // bubble back to parent --> claim
+    props.setConnection(res); 
   }
 
   return (

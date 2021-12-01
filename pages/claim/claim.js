@@ -1,168 +1,209 @@
 import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect} from 'react';
+import Container from "@mui/material/Container";
+import CircularProgress from '@mui/material/CircularProgress';
+import {setNewRecipient, claimReputation, getRecipient, getPendingTXStatus} from '../../lib/connect.serv.js';
 
-import SwitchAndConnectButton from '../../lib/switchConnectButton.js';
-import ErrorHandler from './ErrorHandler.js';
-
-export default function Claim(props) {
-  const [providerInstance, setProviderInstance] = useState(null);
-  const [connectedAddress, setConnectedAddress] = useState(null);
-  const [connectedChain, setConnectedChain] = useState(null);
-  const [connectedProvider, setConnectedProvider] = useState(null);
-  const [chainId, setChainId] = useState(null);
-  const [query, setQuery] = useState({status: null});
-  const [error, setError] = useState({status: null, code: null});
-
-  const connectedAddressRef = useRef(connectedAddress);
-  const connectedChainRef = useRef(connectedChain);
-  const chainIdRef = useRef(chainId);
+export default function Claim(props){
+  const [proof, setProof] = useState(null);
+  const [connectionDetails, setConnectionDetails] = 
+        useState({connectedChain: null, connectedAddress: null});
+  const [query, setQuery] = useState({status: 'init'});
+  const [repRecipient, setRepRecipient] = useState(null);
+  const [contractInstance, setContractInstance] = useState(null);
 
   useEffect(() => {
-    chainIdRef.current = chainId;
-  }, [chainId]);
-
-  useEffect(() => {
-    connectedAddressRef.current = connectedAddress;
-  }, [connectedAddress]);
-
-  useEffect(() => {
-    connectedChainRef.current = connectedChain;
-  }, [connectedChain]);
-
-  useEffect(() => {
-    if (props.currentConnection){
-      setProviderInstance(props.currentConnection.providerInstance);
-      setConnectedAddress(props.currentConnection.connectedAddress);
-      setChainId(props.currentConnection.chainId);
-      setConnectedProvider(props.currentConnection.providerName);
-      if (props.currentConnection.connectedChain == 'unsupported'){
-        wrongNetwork();
-      } else {
-        setQuery({status: null});
-        setError({status: null, code: null});
-        setConnectedChain(props.currentConnection.connectedChain);
-      }
-    }
+    setProof(props.proofData);
+    getRec(props.currentConnection);
+    setConnectionDetails(props.currentConnection);
   }, [props]);
 
-
-  const addFuseNetwork = async(id) => {
-    setQuery({status: "loading-connect", code: null});
-    providerInstance.eth.currentProvider.request({
-      method: 'wallet_addEthereumChain',
-      params: [{
-        chainId: id,
-        chainName: 'Fuse Mainnet',
-        nativeCurrency: {
-          name: 'Fuse',
-          symbol: 'FUSE',
-          decimals: 18
-        },
-          rpcUrls: ['https://rpc.fuse.io'],
-          blockExplorerUrls: ['https://explorer.fuse.io']
-        }],
+  const changeRecipient = async(e) => {
+    let newRecipient = e.target[0].value;
+    e.preventDefault();
+    setQuery({status: 'newRep-pending'});
+    const newRecipientSet = setNewRecipient(contractInstance, 
+                                            connectionDetails, 
+                                            newRecipient);      
+    newRecipientSet.then((res) => {
+      if (res.status){
+        getRec(connectionDetails);
+        setQuery({status: 'claim-init'});
+      }
     }).catch((err) => {
-        setQuery({status: 'error'});
-        setError({status: '', code: err.code});
+      // console.log("error in changing -->", err);
+      setQuery({status: 'init'});
     });
   }
 
-  // Switching of network by button
-  const switchNetwork = async (chainId) => {
-    if (connectedProvider !== "WC"){
-      providerInstance.eth.currentProvider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: chainId}]
-      }).catch((err) => {
-        if (err.code == 4902){
-          addFuseNetwork(chainId);
-        } else {
-          setError({status: null, code: err.code});
-        }
-      });
-    }  
+  const getRec = async(currentConnection) => {
+    const getRecc = await getRecipient(contractInstance, currentConnection);
+    setContractInstance(getRecc.contractInstance);
+    const emptyAddress = /^0x0+$/.test(getRecc.recipient);
+    let recipient = emptyAddress ? currentConnection.connectedAddress : getRecc.recipient;
+    setRepRecipient(recipient);
+
+    let pendingTXClaim = JSON.parse(localStorage.getItem('pendingClaim')),
+        pendingTXNewRec = JSON.parse(localStorage.getItem('pendingNewRec'));
+    if (pendingTXClaim || pendingTXNewRec) {
+      setQuery({status: "pending"});
+      let pendingTXStatus = setInterval(() => {
+        const txStatus = getPendingTXStatus(currentConnection, pendingTX);
+        txStatus.then((res) => {
+          if (res) {
+            setQuery({status: "claim-init"});
+            clearInterval(pendingTXStatus);
+          }
+        });
+      }, 7000);
+    }
   }
 
-  const wrongNetwork = (res) => {
-    setError({status: 'wrongNetwork', code: 310});
-    setQuery({status: 'error'});
-    setConnectedChain('unsupported');
-    setChainId('0x00');
+  const backToSwitch = () => {
+    props.toSwitch();
   }
 
-  // Where to get the abi for the new contract?
-  const getReputation = async(chainId) => {
-    const claim = claimReputation("abiHere", 
-                                  props.proofData, 
-                                  connectedProvider, 
-                                  chainId.chainId);
+  const backToRecipient = () => {
+    setQuery({status: 'init'});
+  }
+
+  const skipAndClaim = () => {
+    getRec(connectionDetails);
+    setQuery({status: 'claim-init'});
+  }
+  
+  const claimRep = async() => {
+    console.log('start claiming');
+    setQuery({status: 'claim-start'});
+    const claim = claimReputation(proof, connectionDetails);
+    claim.then((res) => {
+      console.log('claim return -- claim.js -->', res);
+      // Show succesfully claimed message
+    }).catch((err) => {
+      setQuery({status: 'claim-init'});
+    });
   }
 
   return (
-    <div>
-      <div>You are currently connected with address:</div>
-      <Typography variant="span" sx={{fontStyle: "italic", fontWeight: "bold"}}>
-        {connectedAddress} 
-      </Typography>
-      <div>----------------------</div>
-     <div>On network: 
-      <Typography variant="span" 
-                  style={{fontWeight: "bold"}}>
-          {connectedChain}            
-      </Typography>
-      </div>
-      <Box>   
-        <Typography variant="span">
-          Make sure you are connected to the network for which 
-          you want to claim (Blue): 
-        </Typography>
-        <br />                         
-        <SwitchAndConnectButton
-          fullWidth
+    <Container component="claim">
+      <Box sx={{
+        mb: 3,
+      }}>
+        <Button 
           variant="contained"
-          className={`${chainId == 1 ? "chain-connected" : ""}`}
           sx={{
-            mt: 3,
-            mb: 2,
-            backgroundImage: `url('/ethereum.svg')`,
+            mr: 1,
+            backgroundColor: "#9c27b0",
+           '&:hover': {
+              backgroundColor: "#60156c"
+            }
           }}
-          onClick={() => switchNetwork("0x1")}></SwitchAndConnectButton>
-
-        {connectedProvider === "WC" ? null :
-        <SwitchAndConnectButton
-          fullWidth
-          variant="contained"
-          className={`${chainId == 122 ? "chain-connected" : ""}`}
-          sx={{
-            mt: 3,
-            mb: 2,
-            backgroundImage: `url('/fuse.svg')`
-          }}
-          onClick={() => switchNetwork("0x7a")}></SwitchAndConnectButton>
+          onClick={() => backToSwitch()}
+        >Switch Network</Button>
+        {
+          query.status === "claim-init" ?
+            <Button
+              variant="contained"
+              sx={{
+                backgroundColor: "#9c27b0",
+                '&:hover': {
+                  backgroundColor: "#60156c"
+                }
+              }}
+              onClick={() => backToRecipient()}
+            >Change Recipient</Button>
+          : null
         }
       </Box>
+      <Typography paragraph={true}>
+        Connected Network: <br />
+        <Typography variant="span" sx={{fontWeight: 'bold'}}>
+          {connectionDetails.connectedChain}
+        </Typography>      
+      </Typography>
+      <Typography paragraph={true}>
+        You will receive your tokens on address: <br />
+        <Typography variant="span" sx={{fontWeight: 'bold'}}>
+          {repRecipient}
+        </Typography>
+      </Typography>
       {
-        query.status === 'error' && error.status === "wrongNetwork" ? 
-          <ErrorHandler action={error}/>
+        query.status === 'init' ?
+          <div>
+            <Box
+            component="form"
+            onSubmit={changeRecipient}
+            sx={{mt: 1}}
+            >
+            <Typography paragraph={true}>
+              If you want to receive your GOOD tokens on a new address, set a new recipient below.
+            </Typography>
+            <Typography variant="span" color="red">
+              REMEMBER TO ONLY USE ADDRESSESS WHICH ARE YOUR OWN AND SUPPORT ERC-20's
+            </Typography>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              <TextField
+                margin="normal"
+                required
+                id="newRecipient"
+                label="New Recipient"
+                name="newRecipient"
+                sx={{mr: 1}} />
+              <Button 
+                type="submit"
+                variant="contained"
+                sx={{
+                  fontSize: '13px', 
+                  mt: 3, 
+                  mb: 2,
+                  backgroundColor: "#00C3AE", 
+                  '&:hover': {
+                    backgroundColor: "#049484"
+                  }
+                }}
+                >Set New Recipient</Button>
+
+            </div>
+          </Box>
+          <Button
+              variant="contained"
+              sx={{ mt: 3, mb: 2}}
+              onClick={() => skipAndClaim()}
+            >Skip</Button>
+          </div>
         :
+        query.status === 'claim-start' || query.status === 'pending' ?
+          <div>
+            <CircularProgress color="secondary" sx={{marginTop:"20px"}} /> <br />
+            <Typography variant="span" sx={{fontStyle: 'italic'}} color="red">
+                You have a current pending transaction, please wait till confirmation.
+            </Typography>
+          </div> 
+        :   
         <Box>
           <Button
-            fullWidth
             variant="contained"
+            fullWidth
             sx={{
-              mt: 3, 
-              mb: 2, 
+              mt:3, 
+              mb:2,
               backgroundColor: "#00C3AE", 
                 '&:hover': {
                   backgroundColor: "#049484"
-            }}}
-            onClick={() => getReputation({chainId})}>
-              Claim your tokens
+                }
+            }}
+            onClick={() => claimRep()}
+          > claim your tokens
           </Button>
-      </Box>
+        </Box>
       }
-    </div>
+    </Container> 
   )
 }

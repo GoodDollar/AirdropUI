@@ -30,21 +30,6 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import ClaimDialog from "./claim/claimDialog";
 import IneligibleAddress from "./claim/ineligible.js";
 
-
-// Temporary solution for loading the contract ABI (Eth and Fuse GoodDollar contract)
-export async function getStaticProps(){
-  let fs = require('fs');
-  let contractABI = JSON.parse(
-      fs.readFileSync(__dirname + "/../../../lib/abiTest.json").toString()
-  );
-
-  return {
-    props: {
-      cabiProp: contractABI
-    }
-  }
-}
-
 async function copyText(text) {
   console.log({ text });
   if ("clipboard" in navigator) {
@@ -148,7 +133,7 @@ const AirdropData = ({ hexProof, proofIndex, addr, reputationInWei }) => {
     </Box>
   );
 };
-export default function SignIn({cabiProp}) {
+export default function SignIn() {
   const [data, setData] = useState();
 
   // for triggering the dialog
@@ -293,10 +278,9 @@ export default function SignIn({cabiProp}) {
             :
             data.addr ?
             // the claim dialog 
-            <ClaimDialog cabiProp={cabiProp} 
-                   proofData={data}
-                   open={diaOpen}
-                   onClose={handleClose}></ClaimDialog>
+            <ClaimDialog proofData={data}
+                         open={diaOpen}
+                         onClose={handleClose}></ClaimDialog>
               : null
               : null 
           }

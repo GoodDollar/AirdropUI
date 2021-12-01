@@ -20,7 +20,8 @@ export default function ErrorHandler(props) {
     wrongNetwork: 'Sorry, you seem to be connected to an unsupported network',
     wrongAddress: 'Sorry, you are not connected to the right address. '+ 
                   'Please disconnect first, then retry with the eligible address.',
-    disconnect: 'You have disconnected from the dapp.'
+    disconnect: 'You have disconnected from the dapp.',
+    alreadyClaimed: 'You have already claimed your GOOD for this network'
   }
 
   let statusCodes = {4001: 'cancelled',
@@ -28,13 +29,12 @@ export default function ErrorHandler(props) {
                      '-32002': 'pending',
                      310: 'wrongNetwork',
                      312: 'wrongAddress', 
-                     313: 'disconnect'}
+                     313: 'disconnect',
+                     318: 'alreadyClaimed'}
 
   let withTimeOut = ['cancelled', 'pending', 'disconnect'].join(":");
 
   useEffect(() => {
-    console.log('error Handler triggered');
-    console.log('error handler props -->', props);
     for (const [code, status] of Object.entries(statusCodes)) {
       if (props.action.code == parseInt(code)){
         setErrorStatus(status);
@@ -44,7 +44,6 @@ export default function ErrorHandler(props) {
   }, [errorInit]);
 
   useEffect(() => {
-    console.log('errorStatus -->', errorStatus);
     setError(messages[errorStatus]);
     if (withTimeOut.indexOf(errorStatus) !== -1) {
       setTimeout(() => {

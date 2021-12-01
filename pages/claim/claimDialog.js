@@ -1,10 +1,10 @@
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
-import Typography from "@mui/material/Typography";
 import React, { useState, useEffect} from 'react';
 
 import Provider from './provider.js';
+import Switch from './switch.js';
 import Claim from './claim.js';
 
 export default function ClaimDialog(props) {
@@ -25,22 +25,6 @@ export default function ClaimDialog(props) {
 
   const handleClose = () => {
     onClose();
-  }
-
-  const connectionHandler = (res) => {
-    console.log("change address now -->", res);
-    if (res.status == 'error'){
-      // TODO: Not showing disconnect message properly yet
-      setCurrentConnection(null);
-      setQuery(res);
-      setConnectedAddress(null);
-    } else {
-      setCurrentConnection(res);
-      setQuery({status: 'connected'});
-      setProviderEvents({status: 'init'});
-      // after connected address is set, switch component is loaded
-      setConnectedAddress(res.connectedAddress);
-    }
   }
 
   useEffect(() => {
@@ -78,8 +62,8 @@ export default function ClaimDialog(props) {
           if (res.length === 0) {
             let status = {status: 'disconnect', code: 313};
             setQuery(status);
-            setCurrentConnection(null);
             setConnectedAddress(null);
+            setCurrentConnection(null);
           }
         });
       } else {
@@ -110,6 +94,30 @@ export default function ClaimDialog(props) {
     }
   }, [providerEvents]);
 
+  
+  const connectionHandler = async(res) => {
+    console.log("change address now -->", res);
+    if (res.status == 'error'){
+      // TODO: Not showing disconnect message properly yet
+      setCurrentConnection(null);
+      setQuery(res);
+      setConnectedAddress(null);
+    } else {
+      setCurrentConnection(res);
+      setQuery({status: 'connected'});
+      setProviderEvents({status: 'init'});
+      // after connected address is set, switch component is loaded 
+      setConnectedAddress(res.connectedAddress);
+    }
+  }
+  const getReputation = () => {
+    setQuery({status: 'claiming'});
+  }
+
+  const backToSwitch = () => {
+    setQuery({status: 'connected'});
+  }
+
   return (
     <Dialog onClose={handleClose} open={open}>
       <DialogContent 
@@ -122,20 +130,17 @@ export default function ClaimDialog(props) {
           alignItems: "center"
         }}>
         <DialogTitle>You have {gRep} GOOD Tokens to claim!</DialogTitle>
-        <Typography variant="span"> 
-          Connect your wallet below. 
-          Make sure to connect with your eligible address which is:
-        </Typography>
-        <Typography variant="span" sx={{fontWeight: "bold", fontStyle: "italic"}}>
-          {claimAddress}
-        </Typography>
-        { !connectedAddress ?
-          <Provider claimAddress={claimAddress} 
-                    setConnection={connectionHandler}
-                    query={query} />
+        { !connectedAddress || query.status === 'disconnect' ?
+            <Provider claimAddress={claimAddress} 
+                      setConnection={connectionHandler}
+                      query={query} />
           :
-          <Claim proofData={props.proofData} currentConnection={currentConnection} 
-                  setConnection={connectionHandler} />
+          connectedAddress && query.status === 'connected' ?
+            <Switch proofData={props.proofData} currentConnection={currentConnection} 
+                    getRep={getReputation} />
+          :
+            <Claim proofData={props.proofData} currentConnection={currentConnection}
+                   toSwitch={backToSwitch} />
         }
       </DialogContent>
     </Dialog>
