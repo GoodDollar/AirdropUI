@@ -65,24 +65,25 @@ export default function Provider(props) {
       // user is not connected yet
       const web3 = new Web3(Web3.givenProvider || testUrl);
       conAddr = walletConnect(providerName, web3, claimAddressRef.current);
-    } else {
-      console.log('wallet connect attempt connect for claim');
+    } else if (!providerInstanceRef.current && providerName == "WC"){
       const Wc3 = new WalletConnectProvider({
-        infuraId: infuraConfig.infuraId
+        infuraId: infuraConfig.infuraId,
+        rpc: {
+          1: infuraConfig.infuraUrl,
+          122: infuraConfig.pocketUrl,
+        },
       });
-      setProviderInstance(Wc3);
-      // providerInit(providerName, Wc3);
+      const web3wc = new Web3(Wc3);
       // TODO: If user closes modal from the dapp, a proper error is returned
       //       If user declines the connection from wallet, nothing returns, 
       //       and below promise return stays pending
-      conAddr = walletConnect(providerName, Wc3);
+      conAddr = walletConnect(providerName, web3wc, claimAddressRef.current);
     }
 
     conAddr.then((res) => {
-      // console.log('successfully connected');
+      setProviderInstance(res.providerInstance);
       success(res);
     }).catch((err) => {
-      // console.log('catch"m -->', err.code);
       errorInit(err);
     });
   }
@@ -94,7 +95,6 @@ export default function Provider(props) {
   }
 
   const disconnect = () => {
-    console.log("disconnecting . . .");
     setProviderInstance(null);
     setTimeout(() => {
       setQuery({status: 'error'});
@@ -117,7 +117,7 @@ export default function Provider(props) {
         disconnect();
       });
     } else {
-      res.providerInsance.on("disconnect", (code, res) =>{
+      res.providerInstance.on("disconnect", (code, res) =>{
         providerInstanceRef.current.removeAllListeners();
         disconnect();
       });

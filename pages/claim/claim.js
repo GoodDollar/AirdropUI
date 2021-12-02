@@ -24,18 +24,17 @@ export default function Claim(props){
   const changeRecipient = async(e) => {
     let newRecipient = e.target[0].value;
     e.preventDefault();
-    setQuery({status: 'newRep-pending'});
+    setQuery({status: 'pending'});
     const newRecipientSet = setNewRecipient(contractInstance, 
                                             connectionDetails, 
-                                            newRecipient);      
+                                            newRecipient);    
     newRecipientSet.then((res) => {
-      if (res.status){
+      if (res.code == 4001){
+        setQuery({status: 'init'});
+      } else {
         getRec(connectionDetails);
         setQuery({status: 'claim-init'});
       }
-    }).catch((err) => {
-      // console.log("error in changing -->", err);
-      setQuery({status: 'init'});
     });
   }
 
@@ -51,7 +50,7 @@ export default function Claim(props){
     if (pendingTXClaim || pendingTXNewRec) {
       setQuery({status: "pending"});
       let pendingTXStatus = setInterval(() => {
-        const txStatus = getPendingTXStatus(currentConnection, pendingTX);
+        const txStatus = getPendingTXStatus(currentConnection, pendingTXClaim ?? pendingTXNewRec);
         txStatus.then((res) => {
           if (res) {
             setQuery({status: "claim-init"});
@@ -76,12 +75,10 @@ export default function Claim(props){
   }
   
   const claimRep = async() => {
-    console.log('start claiming');
     setQuery({status: 'claim-start'});
-    const claim = claimReputation(proof, connectionDetails);
+    const claim = claimReputation(proof, connectionDetails, contractInstance);
     claim.then((res) => {
-      console.log('claim return -- claim.js -->', res);
-      // Show succesfully claimed message
+      //TODO:  Show succesfully claimed message
     }).catch((err) => {
       setQuery({status: 'claim-init'});
     });

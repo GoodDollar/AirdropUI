@@ -29,9 +29,8 @@ export default function ClaimDialog(props) {
 
   useEffect(() => {
     if (providerEvents.status == 'init') {
-      if (currentConnection.providerName == "MM") {
+      if (currentConnection.providerName == "MM" || currentConnection.providerName == "WC") {
         let supportedChains = ['0x7a', '0x1', 1, 122].join(':');
-
         // TODO: Either window reload or a state property so that the event doesn't have multiple instances
         currentConnection.providerInstance.currentProvider.on('chainChanged', (chainId) => {
           if (supportedChains.indexOf(chainId) !== -1) {
@@ -58,6 +57,7 @@ export default function ClaimDialog(props) {
         });
         // TODO: Handle connection of multiple accounts
         currentConnection.providerInstance.currentProvider.on('accountsChanged', (res) => {
+          console.log('disconnecting . . .');
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           if (res.length === 0) {
             let status = {status: 'disconnect', code: 313};
@@ -66,25 +66,11 @@ export default function ClaimDialog(props) {
             setCurrentConnection(null);
           }
         });
-      } else {
-        currentConnection.providerInstance.on("accountsChanged", (accounts) => {
-          // runs on every connection through the WC provider
-          console.log('wc accounts changed --> accounts -->', accounts);
-        });
 
-        // provInstanceRef.on("connect", () => {
-        //   // after clicking connect button in wallet
-        //   console.log('wc connect');
-        // });
-
-        currentConnection.providerInstance.on("chainChanged", (chainId) => {
-          console.log("wc chainChanged");
-          // do stuff
-        })
-
-        currentConnection.providerInstance.on("disconnect", (code, res) =>{
+        currentConnection.providerInstance.currentProvider.on("disconnect", (code, res) =>{
           // code 1000 == disconnect
-          currentConnection.providerInstance.removeAllListeners();
+          console.log('wc disconnect triggered -->');
+          currentConnection.providerInstance.currentProvider.removeAllListeners();
           let status = {status: 'disconnect', code: 313};
           setQuery(status);
           setCurrentConnection(null);
@@ -96,7 +82,6 @@ export default function ClaimDialog(props) {
 
   
   const connectionHandler = async(res) => {
-    console.log("change address now -->", res);
     if (res.status == 'error'){
       // TODO: Not showing disconnect message properly yet
       setCurrentConnection(null);

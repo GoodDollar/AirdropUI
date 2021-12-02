@@ -59,8 +59,8 @@ export default function Switch(props) {
   const alreadyClaimed = async(currentConnection) => {
     setQuery({status: 'get-claim-status'});
     const claimStatus = getClaimStatus(currentConnection);
-    console.log('claimStatus -- switch.js -->', claimStatus);
     claimStatus.then((res) => {
+      // setQuery({status: 'idle'}); // for testing local only
       setIsClaimed(res);
       for (const [stateId, status] of Object.entries(res)){
         if (status && currentConnection.chainId == stateChainIds[stateId]){
@@ -153,11 +153,10 @@ export default function Switch(props) {
             mb: 2,
             backgroundImage: `url('/ethereum.svg')`,
           }}
-          onClick={(e) => switchNetwork("0x1", "fuse")}>
+          onClick={() => switchNetwork("0x1", "fuse")}>
             {isClaimed.fuse ? <span>Claimed!</span> : ""}
           </SwitchAndConnectButton>
-
-        {connectedProvider === "WC" ? null :
+        
         <SwitchAndConnectButton
           fullWidth
           variant="contained"
@@ -169,10 +168,10 @@ export default function Switch(props) {
             mb: 2,
             backgroundImage: `url('/fuse.svg')`
           }}
-          onClick={(e) => switchNetwork("0x7a", "rootState")}>
+          onClick={() => switchNetwork("0x7a", "rootState")}>
             {isClaimed.rootState ? <span>Claimed!</span>: ""}
           </SwitchAndConnectButton>
-        }
+        
       </Box>
       {
         query.status === 'error' && (error.status === "wrongNetwork" || error.status === "alreadyClaimed") ? 
