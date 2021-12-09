@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import React, {useState, useEffect} from 'react';
 import Container from "@mui/material/Container";
 import CircularProgress from '@mui/material/CircularProgress';
+import CheckMarkDone from '../../lib/checkMarkDone.js';
 import {setNewRecipient, claimReputation, getRecipient, getPendingTXStatus} from '../../lib/connect.serv.js';
 
 export default function Claim(props){
@@ -14,8 +15,10 @@ export default function Claim(props){
   const [query, setQuery] = useState({status: 'init'});
   const [repRecipient, setRepRecipient] = useState(null);
   const [contractInstance, setContractInstance] = useState(null);
+  const [isMob, setIsMobile] = useState(null);
 
   useEffect(() => {
+    setIsMobile(props.isMobile);
     setProof(props.proofData);
     getRec(props.currentConnection);
     setConnectionDetails(props.currentConnection);
@@ -38,6 +41,10 @@ export default function Claim(props){
     });
   }
 
+  /** Notice
+   * 
+   * Empty Address when no new recipient has been set yet. Default(Eligible) user is used
+  **/
   const getRec = async(currentConnection) => {
     const getRecc = await getRecipient(contractInstance, currentConnection);
     setContractInstance(getRecc.contractInstance);
@@ -78,9 +85,15 @@ export default function Claim(props){
     setQuery({status: 'claim-start'});
     const claim = claimReputation(proof, connectionDetails, contractInstance);
     claim.then((res) => {
-      //TODO:  Show succesfully claimed message
-    }).catch((err) => {
-      setQuery({status: 'claim-init'});
+      if (res?.code){
+        setQuery({status: 'claim-failed'});
+        setTimeout(() => {
+          setQuery({status: 'claim-init'});
+        }, 2000);
+      } else {
+        setQuery({status: 'claim-success'});
+        localStorage.removeItem("pendingClaim");
+      }
     });
   }
 
@@ -93,6 +106,7 @@ export default function Claim(props){
           variant="contained"
           sx={{
             mr: 1,
+            mb: isMob ? 1 : 0,
             backgroundColor: "#9c27b0",
            '&:hover': {
               backgroundColor: "#60156c"
@@ -123,7 +137,9 @@ export default function Claim(props){
       </Typography>
       <Typography paragraph={true}>
         You will receive your tokens on address: <br />
-        <Typography variant="span" sx={{fontWeight: 'bold'}}>
+        <Typography variant="span" sx={{fontWeight: 'bold', 
+                                        fontStyle: 'italic',
+                                        fontSize: isMob ? "11px" : "initial"}}>
           {repRecipient}
         </Typography>
       </Typography>
@@ -136,7 +152,8 @@ export default function Claim(props){
             sx={{mt: 1}}
             >
             <Typography paragraph={true}>
-              If you want to receive your GOOD tokens on a new address, set a new recipient below.
+              If you want to receive your GOOD tokens on a new address, 
+              set a new recipient below.
             </Typography>
             <Typography variant="span" color="red">
               REMEMBER TO ONLY USE ADDRESSESS WHICH ARE YOUR OWN AND SUPPORT ERC-20's
@@ -176,13 +193,48 @@ export default function Claim(props){
             >Skip</Button>
           </div>
         :
-        query.status === 'claim-start' || query.status === 'pending' ?
-          <div>
+        query.status === 'pending' ?
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            flexDirection: "column",
+          }}>
             <CircularProgress color="secondary" sx={{marginTop:"20px"}} /> <br />
             <Typography variant="span" sx={{fontStyle: 'italic'}} color="red">
                 You have a current pending transaction, please wait till confirmation.
             </Typography>
           </div> 
+        :
+        query.status === 'claim-start' || 
+        query.status === 'claim-success' || 
+        query.status === 'claim-failed' ?
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flexDirection: 'column'
+          }}>
+            <CheckMarkDone 
+              className={`${query.status === 'claim-success' ||  
+                            query.status === 'claim-failed' ? "load-complete" : ""}` +
+                            " circle-loader "}>
+              <CheckMarkDone 
+                className={ `${query.status === 'claim-success' ? "done" : ""}` +
+                            `${query.status === 'claim-start' || 
+                               query.status === 'claim-success' ? " checkmark draw " : ""}` +
+                            `${query.status === 'claim-failed' ? " check-x draw failed " : ""}`}/>
+            </CheckMarkDone>
+
+            <Typography variant="span" sx={{fontWeight: "bold", color: "rgb(156, 39, 176);"}}>
+              {
+                query.status === 'claim-start' ?
+                  "Your GOOD is being claimed . . ." :
+                query.status === 'claim-success' ?
+                  "You have succefully claimed your GOOD!" :
+                  "You cancelled your transaction"
+              }
+            </Typography>
+          </Box>
+
         :   
         <Box>
           <Button

@@ -1,11 +1,13 @@
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect, useRef} from 'react';
 
 import Provider from './provider.js';
 import Switch from './switch.js';
 import Claim from './claim.js';
+import MobileInfo from './mobileInfo';
+import isMobileHook from '../../lib/isMobile';
 
 export default function ClaimDialog(props) {
   const [claimAddress, setClaimAddress] = useState(null);
@@ -17,6 +19,13 @@ export default function ClaimDialog(props) {
   const [currentConnection, setCurrentConnection] = useState(null);
   const [providerEvents, setProviderEvents] = useState({status: null});
 
+  const isMobile = isMobileHook();
+
+  const queryRef = useRef(query);
+  useEffect(() => {
+    queryRef.current = query;
+  }, [query])
+  
   useEffect(() => {
     let gRep = props.proofData.reputationInWei / 1e18;
     setGRep(gRep);
@@ -43,6 +52,7 @@ export default function ClaimDialog(props) {
             }
             setCurrentConnection(updateConnection);
             setConnectedAddress(currentConnection.connectedAddress);
+            setQuery({status: 'connected'});
           } else {
             const updateConnection = {
               providerName: currentConnection.providerName,
@@ -53,13 +63,13 @@ export default function ClaimDialog(props) {
             }
             setCurrentConnection(updateConnection);
             setConnectedAddress(currentConnection.connectedAddress);
+            setQuery({status: 'connected'});
           }
         });
-        // TODO: Handle connection of multiple accounts
         currentConnection.providerInstance.currentProvider.on('accountsChanged', (res) => {
           console.log('disconnecting . . .');
           currentConnection.providerInstance.currentProvider.removeAllListeners();
-          if (res.length === 0) {
+          if (res.length === 0 || res[0] !== claimAddress) {
             let status = {status: 'disconnect', code: 313};
             setQuery(status);
             setConnectedAddress(null);
@@ -108,12 +118,15 @@ export default function ClaimDialog(props) {
       <DialogContent 
         className="dialogContentContainer" 
         sx={{
-          width: "500px",
+          width: isMobile ? "100%" : "500px",
           height: "max-content",
           display: "flex",
           flexDirection: "column",
           alignItems: "center"
         }}>
+
+          <MobileInfo />
+        
         <DialogTitle>You have {gRep} GOOD Tokens to claim!</DialogTitle>
         { !connectedAddress || query.status === 'disconnect' ?
             <Provider claimAddress={claimAddress} 
@@ -121,11 +134,14 @@ export default function ClaimDialog(props) {
                       query={query} />
           :
           connectedAddress && query.status === 'connected' ?
-            <Switch proofData={props.proofData} currentConnection={currentConnection} 
-                    getRep={getReputation} />
+            <Switch proofData={props.proofData} 
+                    currentConnection={currentConnection} 
+                    getRep={getReputation}
+                    isMobile={isMobile} />
           :
             <Claim proofData={props.proofData} currentConnection={currentConnection}
-                   toSwitch={backToSwitch} />
+                   toSwitch={backToSwitch}
+                   isMobile={isMobile} />
         }
       </DialogContent>
     </Dialog>

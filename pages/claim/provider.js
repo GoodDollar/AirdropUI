@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';``
+import React, {useState, useEffect, useRef} from 'react';
 import Box from "@mui/material/Box";
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -117,8 +117,8 @@ export default function Provider(props) {
         disconnect();
       });
     } else {
-      res.providerInstance.on("disconnect", (code, res) =>{
-        providerInstanceRef.current.removeAllListeners();
+      res.providerInstance.currentProvider.on("disconnect", (code, res) =>{
+        providerInstanceRef.current.currentProvider.removeAllListeners();
         disconnect();
       });
     }

@@ -17,11 +17,11 @@ export default function Switch(props) {
   const [providerInstance, setProviderInstance] = useState(null);
   const [connectedAddress, setConnectedAddress] = useState(null);
   const [connectedChain, setConnectedChain] = useState(null);
-  const [connectedProvider, setConnectedProvider] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [query, setQuery] = useState({status: null});
   const [error, setError] = useState({status: null, code: null});
   const [isClaimed, setIsClaimed] = useState({fuse: false, rootState: false});
+  const [isMob, setIsMobile] = useState(null);
 
   const connectedAddressRef = useRef(connectedAddress);
   const connectedChainRef = useRef(connectedChain);
@@ -40,11 +40,11 @@ export default function Switch(props) {
   }, [connectedChain]);
 
   useEffect(() => {
+    setIsMobile(props.isMobile);
     if (props.currentConnection){
       setProviderInstance(props.currentConnection.providerInstance);
       setConnectedAddress(props.currentConnection.connectedAddress);
       setChainId(props.currentConnection.chainId);
-      setConnectedProvider(props.currentConnection.providerName);
       if (props.currentConnection.connectedChain == 'unsupported'){
         wrongNetwork();
       } else {
@@ -60,7 +60,6 @@ export default function Switch(props) {
     setQuery({status: 'get-claim-status'});
     const claimStatus = getClaimStatus(currentConnection);
     claimStatus.then((res) => {
-      // setQuery({status: 'idle'}); // for testing local only
       setIsClaimed(res);
       for (const [stateId, status] of Object.entries(res)){
         if (status && currentConnection.chainId == stateChainIds[stateId]){
@@ -97,11 +96,12 @@ export default function Switch(props) {
 
   // Switching of network by button
   const switchNetwork = async (chainId, stateId) => {
-    if (connectedProvider !== "WC" && !isClaimed[stateId]){
-      providerInstance.eth.currentProvider.request({
+    if (!isClaimed[stateId]){
+      await providerInstance.currentProvider.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: chainId}]
       }).catch((err) => {
+        console.log('err switch -->', err);
         if (err.code == 4902){
           addFuseNetwork(chainId);
         } else {
@@ -125,7 +125,10 @@ export default function Switch(props) {
   return (
     <div>
       <div>Connected Address:</div>
-      <Typography variant="span" sx={{fontStyle: "italic", fontWeight: "bold"}}>
+      {/*TODO: Fontsize 12px for mobile! */}
+      <Typography variant="span" sx={{fontStyle: "italic", 
+                                      fontWeight: "bold",
+                                      fontSize: isMob ? "11px" : "initial"}}>
         {connectedAddress} 
       </Typography>
       <div>----------------------</div>
@@ -178,7 +181,11 @@ export default function Switch(props) {
           <ErrorHandler action={error}/>
         :
         query.status === 'get-claim-status' ?
-          <div>
+          <div style={{
+            display: "flex",
+            alignItems: 'center',
+            flexDirection: "column",
+          }}>
             <CircularProgress color="secondary" sx={{marginTop:"20px"}} /> <br />
             <Typography variant="span" sx={{fontStyle: 'italic'}} color="red">
                 We are checking your reputation balance, please wait a moment.
