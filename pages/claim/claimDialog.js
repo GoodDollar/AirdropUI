@@ -78,6 +78,7 @@ export default function ClaimDialog(props) {
           if (res.length === 0 || res[0] !== claimAddress) {
             let status = {status: 'disconnect', code: 313};
             setQuery(status);
+            setProviderName(null);
             setConnectedAddress(null);
             setCurrentConnection(null);
           }
@@ -89,6 +90,7 @@ export default function ClaimDialog(props) {
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           let status = {status: 'disconnect', code: 313};
           setQuery(status);
+          setProviderName(null);
           setCurrentConnection(null);
           setConnectedAddress(null);
         });
