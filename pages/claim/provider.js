@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import Box from "@mui/material/Box";
 import CircularProgress from '@mui/material/CircularProgress';
+import Typography from "@mui/material/Typography";
 
 import WalletConnectProvider from "@walletconnect/web3-provider";
 const Web3 = require('web3');
@@ -10,6 +11,15 @@ let testUrl = infuraConfig.infuraUrl;
 import SwitchAndConnectButton from '../../lib/switchConnectButton.js';
 import ErrorHandler from './ErrorHandler.js';
 import walletConnect, {isConnected} from '../../lib/connect.serv.js';
+
+/**
+ * Provider component for letting a user connect its wallet through MetaMask/WalletConnect
+ * @notice on mount, checks if user is connected already. If connected, initalization starts auto, 
+ * and loads up switch Component through props callback function from claimDialog
+ * @param props contains: callback function to claimDialog. ClaimAddress.
+ * and query with a status object (used when disconnecting); 
+ * 
+ */
 
 export default function Provider(props) {
   const [initProvider] = useState('init');
@@ -33,6 +43,7 @@ export default function Provider(props) {
     queryRef.current = query;
   }, [query]);
 
+  // list of error codes, status/action can be viewed in ErrorHandler
   let queryConnectionErrors = [4001,311,312,-32002,313].join(":");
   let connectionErrorsTimeout = [4001,311,-32002,313].join(":");
 
@@ -56,11 +67,8 @@ export default function Provider(props) {
     //     "MM" for METAMASK
     //     "WC" for WalletConnect
     // }
-
     setQuery({status: 'loading-connect'});
-
     let conAddr;
-
     if (!providerInstanceRef.current && providerName == "MM"){
       // user is not connected yet
       const web3 = new Web3(Web3.givenProvider || testUrl);
@@ -74,16 +82,20 @@ export default function Provider(props) {
         },
       });
       const web3wc = new Web3(Wc3);
-      // TODO: If user closes modal from the dapp, a proper error is returned
-      //       If user declines the connection from wallet, nothing returns, 
-      //       and below promise return stays pending
       conAddr = walletConnect(providerName, web3wc, claimAddressRef.current);
+
+      // Temporary solution for when a user manually cancels the confirmation.(pending promise, no resolve)
+      // so always reset query status after 30 sec
+      setTimeout(() => {
+        setQuery({status:'init'});
+      }, 30000);
     }
 
     conAddr.then((res) => {
       setProviderInstance(res.providerInstance);
       success(res);
     }).catch((err) => {
+      console.log('conAddr error -->', err);
       errorInit(err);
     });
   }
@@ -152,8 +164,14 @@ export default function Provider(props) {
   }
 
   return (
-    query.status === 'loading-connect' ? 
-      <CircularProgress color="secondary" sx={{marginTop:"20px"}} /> 
+    query.status === 'loading-connect' ?
+    <div style={{display: "flex", alignItems:"center", flexDirection:"column"}}>
+      <CircularProgress color="secondary" sx={{marginTop:"20px"}} /> <br />
+
+      <Typography variant="span" sx={{fontStyle: 'italic'}}>
+        We are trying to connect, if anything goes wrong, this will reset after 30 seconds.
+      </Typography>
+    </div>  
     :   
     queryConnectionErrors.indexOf(error.code) !== -1 && queryRef.current.status == 'error' ?
       <ErrorHandler action={error}/> 

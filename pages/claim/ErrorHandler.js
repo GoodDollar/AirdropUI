@@ -9,6 +9,11 @@ const ErrorSpan = ({message}) => {
   );
 }
 
+/**
+ * Generates error field with relevant message
+ * @param props contains error code 
+ * @dev TODO: when disconnecting, sometimes shows an older cached error message.
+ */
 export default function ErrorHandler(props) {
   const [errorMessage, setError] = useState(null);
   const [errorInit] = useState('init');

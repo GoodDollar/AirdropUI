@@ -8,6 +8,16 @@ import CircularProgress from '@mui/material/CircularProgress';
 import CheckMarkDone from '../../lib/checkMarkDone.js';
 import {setNewRecipient, claimReputation, getRecipient, getPendingTXStatus} from '../../lib/connect.serv.js';
 
+
+const isEth = /^0x[a-fA-F0-9]{40}$/;
+
+/**
+ * Claim component. For setting a new recipient (optional), 
+ * and claim the GOOD tokens for connected network
+ * @param props contains: proofData array, currentConnection Object, callback backToSwitch, 
+ * isMobile boolean
+ * 
+ */
 export default function Claim(props){
   const [proof, setProof] = useState(null);
   const [connectionDetails, setConnectionDetails] = 
@@ -16,6 +26,7 @@ export default function Claim(props){
   const [repRecipient, setRepRecipient] = useState(null);
   const [contractInstance, setContractInstance] = useState(null);
   const [isMob, setIsMobile] = useState(null);
+  const [newRecValue, setNewRecValue] = useState(null);
 
   useEffect(() => {
     setIsMobile(props.isMobile);
@@ -25,25 +36,32 @@ export default function Claim(props){
   }, [props]);
 
   const changeRecipient = async(e) => {
-    let newRecipient = e.target[0].value;
     e.preventDefault();
-    setQuery({status: 'pending'});
-    const newRecipientSet = setNewRecipient(contractInstance, 
-                                            connectionDetails, 
-                                            newRecipient);    
-    newRecipientSet.then((res) => {
-      if (res.code == 4001){
+    if (!isEth.test(e.target[0].value)){
+      return;
+    } else {
+      let newRecipient = e.target[0].value;
+      setQuery({status: 'pending'});
+      const newRecipientSet = setNewRecipient(contractInstance, 
+            connectionDetails, 
+            newRecipient);    
+      newRecipientSet.then((res) => {
+        if (res.code == 4001){
+          setQuery({status: 'init'});
+        } else {
+          getRec(connectionDetails);
+          setQuery({status: 'claim-init'});
+        }
+      }).catch((err) => {
+        setNewRecValue('0x00');
         setQuery({status: 'init'});
-      } else {
-        getRec(connectionDetails);
-        setQuery({status: 'claim-init'});
-      }
-    });
+        return;
+      });;
+    }
   }
 
-  /** Notice
-   * 
-   * Empty Address when no new recipient has been set yet. Default(Eligible) user is used
+  /** 
+   * @notice Empty Address when no new recipient has been set yet. Default(Eligible) _user is used
   **/
   const getRec = async(currentConnection) => {
     const getRecc = await getRecipient(contractInstance, currentConnection);
@@ -152,7 +170,7 @@ export default function Claim(props){
             sx={{mt: 1}}
             >
             <Typography paragraph={true}>
-              If you want to receive your GOOD tokens on a new address, 
+              If you want to receive your GOOD tokens on a different address, 
               set a new recipient below.
             </Typography>
             <Typography variant="span" color="red">
@@ -164,11 +182,14 @@ export default function Claim(props){
               alignItems: 'center'
             }}>
               <TextField
+                error={!isEth.test(newRecValue)}
+                helperText={!isEth.test(newRecValue) ? "This is either not a ETH address, or it doesn't exist" : ''}
                 margin="normal"
                 required
                 id="newRecipient"
                 label="New Recipient"
                 name="newRecipient"
+                onChange={(e) => setNewRecValue(e.target.value)}
                 sx={{mr: 1}} />
               <Button 
                 type="submit"

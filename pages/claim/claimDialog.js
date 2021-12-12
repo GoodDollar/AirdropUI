@@ -9,6 +9,12 @@ import Claim from './claim.js';
 import MobileInfo from './mobileInfo';
 import isMobileHook from '../../lib/isMobile';
 
+/**
+ * parent dialog for provider & switch component
+ * @notice provider events initialized here to properly send user to the right component tab
+ * @param props contains the proofdata and dialog open/close methods
+ */
+
 export default function ClaimDialog(props) {
   const [claimAddress, setClaimAddress] = useState(null);
   const [connectedAddress, setConnectedAddress] = useState(null);
@@ -18,6 +24,7 @@ export default function ClaimDialog(props) {
   const [gRep, setGRep] = useState(null);
   const [currentConnection, setCurrentConnection] = useState(null);
   const [providerEvents, setProviderEvents] = useState({status: null});
+  const [providerName, setProviderName] = useState('init');
 
   const isMobile = isMobileHook();
 
@@ -40,7 +47,6 @@ export default function ClaimDialog(props) {
     if (providerEvents.status == 'init') {
       if (currentConnection.providerName == "MM" || currentConnection.providerName == "WC") {
         let supportedChains = ['0x7a', '0x1', 1, 122].join(':');
-        // TODO: Either window reload or a state property so that the event doesn't have multiple instances
         currentConnection.providerInstance.currentProvider.on('chainChanged', (chainId) => {
           if (supportedChains.indexOf(chainId) !== -1) {
             const updateConnection = {
@@ -90,19 +96,20 @@ export default function ClaimDialog(props) {
     }
   }, [providerEvents]);
 
-  
+  // Callback function for Provider function
   const connectionHandler = async(res) => {
     if (res.status == 'error'){
-      // TODO: Not showing disconnect message properly yet
+      // TODO: Not showing disconnect message properly, shows cached old error message
       setCurrentConnection(null);
       setQuery(res);
       setConnectedAddress(null);
+      setProviderName('init');
     } else {
       setCurrentConnection(res);
-      setQuery({status: 'connected'});
-      setProviderEvents({status: 'init'});
-      // after connected address is set, switch component is loaded 
+      setProviderEvents({status: 'init'}); 
       setConnectedAddress(res.connectedAddress);
+      setProviderName(res.providerName);
+      setQuery({status: 'connected'});
     }
   }
   const getReputation = () => {
@@ -125,7 +132,7 @@ export default function ClaimDialog(props) {
           alignItems: "center"
         }}>
 
-          <MobileInfo />
+          <MobileInfo isMobile={isMobile} providerName={providerName}/>
         
         <DialogTitle>You have {gRep} GOOD Tokens to claim!</DialogTitle>
         { !connectedAddress || query.status === 'disconnect' ?
@@ -133,7 +140,7 @@ export default function ClaimDialog(props) {
                       setConnection={connectionHandler}
                       query={query} />
           :
-          connectedAddress && query.status === 'connected' ?
+          query.status === 'connected' ?
             <Switch proofData={props.proofData} 
                     currentConnection={currentConnection} 
                     getRep={getReputation}

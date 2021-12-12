@@ -13,6 +13,14 @@ const stateChainIds = {
   rootState: 122
 }
 
+/**
+ * Switch networks with local requests. Checks proveAtBlockchain for claimStatus on mount.
+ * @notice adds fuse network if not yet added to metamask
+ * @param props contains: currentConnection Object, isMobile boolean, 
+ * getReputation callBack (claimDialog), proofData array  
+ * @returns 
+ */
+
 export default function Switch(props) {
   const [providerInstance, setProviderInstance] = useState(null);
   const [connectedAddress, setConnectedAddress] = useState(null);
@@ -56,6 +64,8 @@ export default function Switch(props) {
     }
   }, [props]);
 
+  // if user has already claimed for network X, and this is the current connection,
+  // this shows error message and removes/hides button for claiming
   const alreadyClaimed = async(currentConnection) => {
     setQuery({status: 'get-claim-status'});
     const claimStatus = getClaimStatus(currentConnection);
@@ -101,7 +111,7 @@ export default function Switch(props) {
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: chainId}]
       }).catch((err) => {
-        console.log('err switch -->', err);
+        // console.log('err switch -->', err);
         if (err.code == 4902){
           addFuseNetwork(chainId);
         } else {
@@ -118,14 +128,15 @@ export default function Switch(props) {
     setChainId('0x00');
   }
 
+  // Callback from claimDialog to load claim component
   const getReputation = (chainId) => {
     props.getRep(chainId);
   }
 
+  // TODO: maybe change HTML markup. . .
   return (
     <div>
       <div>Connected Address:</div>
-      {/*TODO: Fontsize 12px for mobile! */}
       <Typography variant="span" sx={{fontStyle: "italic", 
                                       fontWeight: "bold",
                                       fontSize: isMob ? "11px" : "initial"}}>

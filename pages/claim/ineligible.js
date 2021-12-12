@@ -4,6 +4,12 @@ import DialogContent from "@mui/material/DialogContent";
 import React, { useState, useEffect } from 'react';
 import isMobileHook from '../../lib/isMobile';
 
+
+/**
+ * Small dialog screen when user enters an ineligble address
+ * @param props contains: open/close callbacks for dialog 
+ * @returns 
+ */
 export default function IneligibleAddress(props) {
   const [sorryMessage] = useState('Sorry, this address does not have any GOOD tokens to claim.');
   const {onClose, open} = props;

@@ -145,7 +145,7 @@ export default function SignIn() {
     const addr = event.currentTarget.wallet.value;
     const result = await fetch(`/api/repAirdrop/${addr}`)
                    .then((_) => _.json());
-    console.log({ result });
+    // console.log({ result });
     setData(result);
 
     result.error ? setErrorOpen(true) : setOpen(true);

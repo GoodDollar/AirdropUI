@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Dialog from "@mui/material/Dialog";
@@ -9,9 +9,22 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 
-export default function MobileInfo() {
+
+/**
+ * Dialog with some usage information for users who connect with wallet-connect
+ * triggered manually by button (desktop and mobile)
+ * triggered automatically when using wallet-connect or isMobile
+ */
+export default function MobileInfo(props) {
   const [isActive, setIsActive] = useState(false);
   const [diaOpen, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (props.isMobile || props.providerName == 'WC'){
+      setIsActive(true);
+      setOpen(true);
+    }
+  }, [props]);
 
   const showInfo = (active) => {
    active ? setIsActive(false) : setIsActive(true);
@@ -53,7 +66,7 @@ export default function MobileInfo() {
           <DialogContent>
             <Box sx={{width: "95%", maxWidth: 450}}>
               <Typography variant="body1" gutterBottom>
-                There are some things to be carefull with 
+                There are some things to be careful with 
                 when using a mobile wallet and Wallet-Connect. 
                 This is due to some technical limitations.
                 If you follow below points carefully, everything should work as intended!
@@ -62,7 +75,7 @@ export default function MobileInfo() {
                 <ListItem>
                   <ListItemText primary={
                     "1. Always double-check the network for which you receive transaction requests." +
-                    " Make sure it is the received on the network you initially connected with."
+                    " Make sure it is received on the network you initially connected with."
                   }/>
                 </ListItem>
                 <ListItem>
