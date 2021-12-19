@@ -151,11 +151,11 @@ export default function SignIn() {
 
   const handleClose = useCallback((value) => {
     setOpen(false);
-  });
+  }, [setOpen]);
 
   const handleErrorClose = useCallback((value) => {
     setErrorOpen(false);
-  })
+  },[setErrorOpen])
 
   return (
     <ThemeProvider theme={theme}>

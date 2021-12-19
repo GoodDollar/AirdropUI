@@ -112,7 +112,7 @@ export default function ClaimDialog(props) {
       setProviderName(res.providerName);
       setQuery({status: 'connected'});
     }
-  });
+  },[setQuery, setProviderName, setConnectedAddress, setProviderEvents, setCurrentConnection]);
 
   const getReputation = useCallback(() => {
     setQuery({status: 'claiming'});

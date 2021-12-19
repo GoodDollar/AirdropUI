@@ -97,7 +97,7 @@ export default function Provider(props) {
       console.log('conAddr error -->', err);
       errorInit(err);
     });
-  });
+  },[setQuery, setProviderInstance]);
 
   const wrongNetwork = (res) => {
     if (query.status !== 'success') {

@@ -119,7 +119,7 @@ export default function Switch(props) {
         }
       });
     }  
-  }, [chainId]);
+  }, [chainId, providerInstance, isClaimed, addFuseNetwork]);
 
   const wrongNetwork = () => {
     setError({status: 'wrongNetwork', code: 310});
@@ -131,7 +131,7 @@ export default function Switch(props) {
   // Callback from claimDialog to load claim component
   const getReputation = useCallback((chainId) => {
     props.getRep(chainId);
-  }, [chainId]);
+  }, [chainId, props.getRep]);
 
   // TODO: maybe change HTML markup. . .
   return (

@@ -58,7 +58,7 @@ export default function Claim(props){
         return;
       });
     }
-  });
+  },[getRec, setNewRecValue, setQuery, setNewRecipient, connectionDetails]);
 
   /** 
    * @dev_notice Empty Address when no new recipient has been set yet. Default(Eligible) _user is used
@@ -84,11 +84,11 @@ export default function Claim(props){
         });
       }, 7000);
     }
-  }, [connectionDetails]);
+  }, [connectionDetails, setRepRecipient, setQuery]);
 
   const backToSwitch = useCallback(() => {
     props.toSwitch();
-  });
+  },[props.toSwitch]);
 
   const backToRecipient = useCallback(() => {
     setQuery({status: 'init'});
@@ -97,7 +97,7 @@ export default function Claim(props){
   const skipAndClaim = useCallback(() => {
     getRec(connectionDetails);
     setQuery({status: 'claim-init'});
-  }, [connectionDetails]);
+  }, [connectionDetails, setQuery, getRec]);
   
   const claimRep = useCallback(async() => {
     setQuery({status: 'claim-start'});
@@ -111,7 +111,7 @@ export default function Claim(props){
       setQuery({status: 'claim-success'});
       localStorage.removeItem("pendingClaim");
     }
-  }, [connectionDetails, contractInstance]);
+  }, [connectionDetails, contractInstance, setQuery]);
 
   return (
     <Container component="claim">

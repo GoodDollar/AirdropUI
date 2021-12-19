@@ -25,7 +25,7 @@ export default function IneligibleAddress(props) {
 
   const handleErrorClose = useCallback(() => {
     onClose();
-  }, [props]);
+  }, [onClose]);
 
   return (
     <Dialog onClose={handleErrorClose} open={open}>
