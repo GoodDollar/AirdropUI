@@ -1,6 +1,6 @@
 // import Link from 'next/link'
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -25,6 +25,10 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+
+// Claim
+import ClaimDialog from "./claim/claimDialog";
+import IneligibleAddress from "./claim/ineligible.js";
 
 async function copyText(text) {
   console.log({ text });
@@ -131,13 +135,27 @@ const AirdropData = ({ hexProof, proofIndex, addr, reputationInWei }) => {
 };
 export default function SignIn() {
   const [data, setData] = useState();
-  const handleSubmit = async (event) => {
+
+  // for triggering the dialog
+  const [diaOpen, setOpen] = useState(false);
+  const [diaNoGood, setErrorOpen] = useState(false);
+
+  const handleSubmit = useCallback(async (event) => {
     event.preventDefault();
     const addr = event.currentTarget.wallet.value;
-    const result = await fetch(`/api/repAirdrop/${addr}`).then((_) => _.json());
-    console.log({ result });
+    const result = await fetch(`/api/repAirdrop/${addr}`)
+                   .then((_) => _.json());
     setData(result);
-  };
+    result.error ? setErrorOpen(true) : setOpen(true);
+  }, [setData, setErrorOpen, setOpen]);
+
+  const handleClose = useCallback((value) => {
+    setOpen(false);
+  }, [setOpen]);
+
+  const handleErrorClose = useCallback((value) => {
+    setErrorOpen(false);
+  }, [setErrorOpen]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -238,6 +256,35 @@ export default function SignIn() {
         </Box>
         <Copyright sx={{ mt: 8, mb: 4 }} />
       </Container>
+      {/* Claim-Logic Below */}
+      <Container component="claim" maxWidth="xs"
+        sx={{
+          position: "absolute",
+          top: 0,
+          right: "230px",
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+
+        }}>
+        <Box>
+          { data ? 
+            data.error ?
+              <IneligibleAddress open={diaNoGood} 
+                                  onClose={handleErrorClose}></IneligibleAddress>
+            :
+            data.addr ?
+            // the claim dialog 
+            <ClaimDialog proofData={data}
+                         open={diaOpen}
+                         onClose={handleClose}></ClaimDialog>
+              : null
+              : null 
+          }
+        </Box>
+      </Container>
+      {/* End of Claim-Logic */}
     </ThemeProvider>
   );
 }
