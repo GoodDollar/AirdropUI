@@ -56,7 +56,7 @@ export default function Claim(props){
         setNewRecValue('0x00');
         setQuery({status: 'init'});
         return;
-      });;
+      });
     }
   }
 
@@ -101,18 +101,16 @@ export default function Claim(props){
   
   const claimRep = async() => {
     setQuery({status: 'claim-start'});
-    const claim = claimReputation(proof, connectionDetails, contractInstance);
-    claim.then((res) => {
-      if (res?.code){
-        setQuery({status: 'claim-failed'});
-        setTimeout(() => {
-          setQuery({status: 'claim-init'});
-        }, 2000);
-      } else {
-        setQuery({status: 'claim-success'});
-        localStorage.removeItem("pendingClaim");
-      }
-    });
+    const claim = await claimReputation(proof, connectionDetails, contractInstance);
+    if (claim?.code) {
+      setQuery({status: 'claim-failed'});
+      setTimeout(() => {
+        setQuery({status: 'claim-init'});
+      }, 2000);
+    } else {
+      setQuery({status: 'claim-success'});
+      localStorage.removeItem("pendingClaim");
+    }
   }
 
   return (
@@ -130,7 +128,7 @@ export default function Claim(props){
               backgroundColor: "#60156c"
             }
           }}
-          onClick={() => backToSwitch()}
+          onClick={backToSwitch}
         >Switch Network</Button>
         {
           query.status === "claim-init" ?
@@ -142,7 +140,7 @@ export default function Claim(props){
                   backgroundColor: "#60156c"
                 }
               }}
-              onClick={() => backToRecipient()}
+              onClick={backToRecipient}
             >Change Recipient</Button>
           : null
         }
@@ -210,7 +208,7 @@ export default function Claim(props){
           <Button
               variant="contained"
               sx={{ mt: 3, mb: 2}}
-              onClick={() => skipAndClaim()}
+              onClick={skipAndClaim}
             >Skip</Button>
           </div>
         :
@@ -226,9 +224,7 @@ export default function Claim(props){
             </Typography>
           </div> 
         :
-        query.status === 'claim-start' || 
-        query.status === 'claim-success' || 
-        query.status === 'claim-failed' ?
+        query.status !== 'claim-init' ?
           <Box sx={{
             display: 'flex',
             alignItems: 'center',
@@ -269,7 +265,7 @@ export default function Claim(props){
                   backgroundColor: "#049484"
                 }
             }}
-            onClick={() => claimRep()}
+            onClick={claimRep}
           > claim your tokens
           </Button>
         </Box>

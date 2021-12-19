@@ -9,8 +9,8 @@ import ErrorHandler from './ErrorHandler.js';
 import {getClaimStatus} from '../../lib/connect.serv.js';
 
 const stateChainIds = {
-  fuse: 1,
-  rootState: 122
+  productionMain: 1,
+  production: 122
 }
 
 /**
@@ -28,7 +28,7 @@ export default function Switch(props) {
   const [chainId, setChainId] = useState(null);
   const [query, setQuery] = useState({status: null});
   const [error, setError] = useState({status: null, code: null});
-  const [isClaimed, setIsClaimed] = useState({fuse: false, rootState: false});
+  const [isClaimed, setIsClaimed] = useState({productionMain: false, production: false});
   const [isMob, setIsMobile] = useState(null);
 
   const connectedAddressRef = useRef(connectedAddress);
@@ -160,30 +160,30 @@ export default function Switch(props) {
           fullWidth
           variant="contained"
           className={` ${chainId == 1 ? "chain-connected" : ""} ` + 
-                     ` ${isClaimed.fuse ? "chain-claimed" : ""} `
+                     ` ${isClaimed.productionMain ? "chain-claimed" : ""} `
           }
           sx={{
             mt: 3,
             mb: 2,
             backgroundImage: `url('/ethereum.svg')`,
           }}
-          onClick={() => switchNetwork("0x1", "fuse")}>
-            {isClaimed.fuse ? <span>Claimed!</span> : ""}
+          onClick={() => switchNetwork("0x1", "productionMain")}>
+            {isClaimed.productionMain ? <span>Claimed!</span> : ""}
           </SwitchAndConnectButton>
         
         <SwitchAndConnectButton
           fullWidth
           variant="contained"
           className={` ${chainId == 122 ? "chain-connected" : ""} ` +  
-                     ` ${isClaimed.rootState ? "chain-claimed" : ""}`
+                     ` ${isClaimed.production ? "chain-claimed" : ""}`
           }
           sx={{
             mt: 3,
             mb: 2,
             backgroundImage: `url('/fuse.svg')`
           }}
-          onClick={() => switchNetwork("0x7a", "rootState")}>
-            {isClaimed.rootState ? <span>Claimed!</span>: ""}
+          onClick={() => switchNetwork("0x7a", "production")}>
+            {isClaimed.production ? <span>Claimed!</span>: ""}
           </SwitchAndConnectButton>
         
       </Box>
@@ -214,7 +214,7 @@ export default function Switch(props) {
                 '&:hover': {
                   backgroundColor: "#049484"
             }}}
-            onClick={() => getReputation()}>
+            onClick={getReputation}>
               Claim your tokens
           </Button>
       </Box>

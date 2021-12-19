@@ -1,7 +1,7 @@
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
-import React, { useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef, useCallback} from 'react';
 
 import Provider from './provider.js';
 import Switch from './switch.js';
@@ -86,7 +86,6 @@ export default function ClaimDialog(props) {
 
         currentConnection.providerInstance.currentProvider.on("disconnect", (code, res) =>{
           // code 1000 == disconnect
-          console.log('wc disconnect triggered -->');
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           let status = {status: 'disconnect', code: 313};
           setQuery(status);
@@ -99,7 +98,7 @@ export default function ClaimDialog(props) {
   }, [providerEvents]);
 
   // Callback function for Provider function
-  const connectionHandler = async(res) => {
+  const connectionHandler = useCallback(async(res) => {
     if (res.status == 'error'){
       // TODO: Not showing disconnect message properly, shows cached old error message
       setCurrentConnection(null);
@@ -113,14 +112,15 @@ export default function ClaimDialog(props) {
       setProviderName(res.providerName);
       setQuery({status: 'connected'});
     }
-  }
-  const getReputation = () => {
-    setQuery({status: 'claiming'});
-  }
+  });
 
-  const backToSwitch = () => {
+  const getReputation = useCallback(() => {
+    setQuery({status: 'claiming'});
+  }, [setQuery]);
+
+  const backToSwitch = useCallback(() => {
     setQuery({status: 'connected'});
-  }
+  }, [setQuery]);
 
   return (
     <Dialog onClose={handleClose} open={open}>

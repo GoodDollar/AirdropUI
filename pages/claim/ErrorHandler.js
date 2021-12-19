@@ -46,7 +46,7 @@ export default function ErrorHandler(props) {
         break;
       }
     }
-  }, [errorInit]);
+  }, [errorInit, props]);
 
   useEffect(() => {
     setError(messages[errorStatus]);
@@ -55,7 +55,7 @@ export default function ErrorHandler(props) {
         setError(null);
       }, 2500);
     }
-  },[errorStatus]);
+  },[errorStatus, props]);
 
   return (
     <ErrorSpan message={errorMessage} />
