@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Dialog from "@mui/material/Dialog";
@@ -26,15 +26,15 @@ export default function MobileInfo(props) {
     }
   }, [props]);
 
-  const showInfo = (active) => {
+  const showInfo = useCallback((active) => {
    active ? setIsActive(false) : setIsActive(true);
    active ? setOpen(false) : setOpen(true);
-  }
+  }, [setIsActive, setOpen]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
     setIsActive(false);
-  }
+  }, [setOpen, setIsActive]);
 
   return (
     <div style={{

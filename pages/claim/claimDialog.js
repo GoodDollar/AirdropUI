@@ -39,9 +39,9 @@ export default function ClaimDialog(props) {
     setClaimAddress(props.proofData.addr);
   }, [initClaim]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onClose();
-  }
+  }, [onClose]);
 
   useEffect(() => {
     if (providerEvents.status == 'init') {

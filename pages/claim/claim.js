@@ -35,31 +35,6 @@ export default function Claim(props){
     setConnectionDetails(props.currentConnection);
   }, [props]);
 
-  const changeRecipient = useCallback(async(e) => {
-    e.preventDefault();
-    if (!isEth.test(e.target[0].value)){
-      return;
-    } else {
-      let newRecipient = e.target[0].value;
-      setQuery({status: 'pending'});
-      const newRecipientSet = setNewRecipient(contractInstance, 
-            connectionDetails, 
-            newRecipient);    
-      newRecipientSet.then((res) => {
-        if (res.code == 4001){
-          setQuery({status: 'init'});
-        } else {
-          getRec(connectionDetails);
-          setQuery({status: 'claim-init'});
-        }
-      }).catch((err) => {
-        setNewRecValue('0x00');
-        setQuery({status: 'init'});
-        return;
-      });
-    }
-  },[getRec, setNewRecValue, setQuery, setNewRecipient, connectionDetails]);
-
   /** 
    * @dev_notice Empty Address when no new recipient has been set yet. Default(Eligible) _user is used
   **/
@@ -86,13 +61,38 @@ export default function Claim(props){
     }
   }, [connectionDetails, setRepRecipient, setQuery]);
 
+  const changeRecipient = useCallback(async(e) => {
+    e.preventDefault();
+    if (!isEth.test(e.target[0].value)){
+      return;
+    } else {
+      let newRecipient = e.target[0].value;
+      setQuery({status: 'pending'});
+      const newRecipientSet = setNewRecipient(contractInstance, 
+            connectionDetails, 
+            newRecipient);    
+      newRecipientSet.then((res) => {
+        if (res.code == 4001){
+          setQuery({status: 'init'});
+        } else {
+          getRec(connectionDetails);
+          setQuery({status: 'claim-init'});
+        }
+      }).catch((err) => {
+        setNewRecValue('0x00');
+        setQuery({status: 'init'});
+        return;
+      });
+    }
+  },[getRec, setNewRecValue, setQuery, setNewRecipient, connectionDetails]);
+
   const backToSwitch = useCallback(() => {
     props.toSwitch();
   },[props.toSwitch]);
 
   const backToRecipient = useCallback(() => {
     setQuery({status: 'init'});
-  });
+  }, [setQuery]);
 
   const skipAndClaim = useCallback(() => {
     getRec(connectionDetails);

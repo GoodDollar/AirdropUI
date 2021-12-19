@@ -140,14 +140,14 @@ export default function SignIn() {
   const [diaOpen, setOpen] = useState(false);
   const [diaNoGood, setErrorOpen] = useState(false);
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = useCallback(async (event) => {
     event.preventDefault();
     const addr = event.currentTarget.wallet.value;
     const result = await fetch(`/api/repAirdrop/${addr}`)
                    .then((_) => _.json());
     setData(result);
     result.error ? setErrorOpen(true) : setOpen(true);
-  };
+  }, [setData, setErrorOpen, setOpen]);
 
   const handleClose = useCallback((value) => {
     setOpen(false);
@@ -155,7 +155,7 @@ export default function SignIn() {
 
   const handleErrorClose = useCallback((value) => {
     setErrorOpen(false);
-  },[setErrorOpen])
+  }, [setErrorOpen]);
 
   return (
     <ThemeProvider theme={theme}>
