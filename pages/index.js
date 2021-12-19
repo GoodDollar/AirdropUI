@@ -1,6 +1,6 @@
 // import Link from 'next/link'
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -145,19 +145,17 @@ export default function SignIn() {
     const addr = event.currentTarget.wallet.value;
     const result = await fetch(`/api/repAirdrop/${addr}`)
                    .then((_) => _.json());
-    // console.log({ result });
     setData(result);
-
     result.error ? setErrorOpen(true) : setOpen(true);
   };
 
-  const handleClose = (value) => {
+  const handleClose = useCallback((value) => {
     setOpen(false);
-  }
+  });
 
-  const handleErrorClose = (value) => {
+  const handleErrorClose = useCallback((value) => {
     setErrorOpen(false);
-  }
+  })
 
   return (
     <ThemeProvider theme={theme}>

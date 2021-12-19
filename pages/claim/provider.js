@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import Box from "@mui/material/Box";
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from "@mui/material/Typography";
@@ -18,7 +18,6 @@ import walletConnect, {isConnected} from '../../lib/connect.serv.js';
  * and loads up switch Component through props callback function from claimDialog
  * @param props contains: callback function to claimDialog. ClaimAddress.
  * and query with a status object (used when disconnecting); 
- * 
  */
 
 export default function Provider(props) {
@@ -62,7 +61,7 @@ export default function Provider(props) {
     }
   }, [initProvider]);
   
-  const connectForClaim = async (providerName) => {
+  const connectForClaim = useCallback(async(providerName) => {
     // Provider {
     //     "MM" for METAMASK
     //     "WC" for WalletConnect
@@ -98,7 +97,7 @@ export default function Provider(props) {
       console.log('conAddr error -->', err);
       errorInit(err);
     });
-  }
+  });
 
   const wrongNetwork = (res) => {
     if (query.status !== 'success') {
@@ -137,7 +136,6 @@ export default function Provider(props) {
   }
 
   const errorInit = (err) => {
-    // console.log('catch"m -->', err);
     err.code == 310 ? 
       wrongNetwork(err.res) 
     :

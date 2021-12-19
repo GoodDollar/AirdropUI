@@ -1,7 +1,7 @@
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import isMobileHook from '../../lib/isMobile';
 
 
@@ -23,9 +23,9 @@ export default function IneligibleAddress(props) {
     }, 2250);
   }, [onInit]);
 
-  const handleErrorClose = () => {
+  const handleErrorClose = useCallback(() => {
     onClose();
-  }
+  }, [props]);
 
   return (
     <Dialog onClose={handleErrorClose} open={open}>

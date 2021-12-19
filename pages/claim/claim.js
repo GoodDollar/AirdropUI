@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import Container from "@mui/material/Container";
 import CircularProgress from '@mui/material/CircularProgress';
 import CheckMarkDone from '../../lib/checkMarkDone.js';
@@ -35,7 +35,7 @@ export default function Claim(props){
     setConnectionDetails(props.currentConnection);
   }, [props]);
 
-  const changeRecipient = async(e) => {
+  const changeRecipient = useCallback(async(e) => {
     e.preventDefault();
     if (!isEth.test(e.target[0].value)){
       return;
@@ -58,12 +58,12 @@ export default function Claim(props){
         return;
       });
     }
-  }
+  });
 
   /** 
-   * @notice Empty Address when no new recipient has been set yet. Default(Eligible) _user is used
+   * @dev_notice Empty Address when no new recipient has been set yet. Default(Eligible) _user is used
   **/
-  const getRec = async(currentConnection) => {
+  const getRec = useCallback(async(currentConnection) => {
     const getRecc = await getRecipient(contractInstance, currentConnection);
     setContractInstance(getRecc.contractInstance);
     const emptyAddress = /^0x0+$/.test(getRecc.recipient);
@@ -84,22 +84,22 @@ export default function Claim(props){
         });
       }, 7000);
     }
-  }
+  }, [connectionDetails]);
 
-  const backToSwitch = () => {
+  const backToSwitch = useCallback(() => {
     props.toSwitch();
-  }
+  });
 
-  const backToRecipient = () => {
+  const backToRecipient = useCallback(() => {
     setQuery({status: 'init'});
-  }
+  });
 
-  const skipAndClaim = () => {
+  const skipAndClaim = useCallback(() => {
     getRec(connectionDetails);
     setQuery({status: 'claim-init'});
-  }
+  }, [connectionDetails]);
   
-  const claimRep = async() => {
+  const claimRep = useCallback(async() => {
     setQuery({status: 'claim-start'});
     const claim = await claimReputation(proof, connectionDetails, contractInstance);
     if (claim?.code) {
@@ -111,7 +111,7 @@ export default function Claim(props){
       setQuery({status: 'claim-success'});
       localStorage.removeItem("pendingClaim");
     }
-  }
+  }, [connectionDetails, contractInstance]);
 
   return (
     <Container component="claim">

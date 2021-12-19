@@ -1,7 +1,7 @@
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 
 import SwitchAndConnectButton from '../../lib/switchConnectButton.js';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -105,7 +105,7 @@ export default function Switch(props) {
   }
 
   // Switching of network by button
-  const switchNetwork = async (chainId, stateId) => {
+  const switchNetwork = useCallback(async (chainId, stateId) => {
     if (!isClaimed[stateId]){
       await providerInstance.currentProvider.request({
         method: 'wallet_switchEthereumChain',
@@ -119,9 +119,9 @@ export default function Switch(props) {
         }
       });
     }  
-  }
+  }, [chainId]);
 
-  const wrongNetwork = (res) => {
+  const wrongNetwork = () => {
     setError({status: 'wrongNetwork', code: 310});
     setQuery({status: 'error'});
     setConnectedChain('unsupported');
@@ -129,9 +129,9 @@ export default function Switch(props) {
   }
 
   // Callback from claimDialog to load claim component
-  const getReputation = (chainId) => {
+  const getReputation = useCallback((chainId) => {
     props.getRep(chainId);
-  }
+  }, [chainId]);
 
   // TODO: maybe change HTML markup. . .
   return (
