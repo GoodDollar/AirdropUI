@@ -28,12 +28,6 @@ export default function Claim(props){
   const [isMob, setIsMobile] = useState(null);
   const [newRecValue, setNewRecValue] = useState(null);
 
-  const contractInstanceRef = useRef(contractInstance);
-
-  useEffect(() => {
-    contractInstanceRef.current = contractInstance;
-  }, [contractInstance]);
-
   useEffect(() => {
     setIsMobile(props.isMobile);
     setProof(props.proofData);
