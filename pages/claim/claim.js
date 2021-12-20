@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import Container from "@mui/material/Container";
 import CircularProgress from '@mui/material/CircularProgress';
 import CheckMarkDone from '../../lib/checkMarkDone.js';
@@ -27,6 +27,12 @@ export default function Claim(props){
   const [contractInstance, setContractInstance] = useState(null);
   const [isMob, setIsMobile] = useState(null);
   const [newRecValue, setNewRecValue] = useState(null);
+
+  const contractInstanceRef = useRef(contractInstance);
+
+  useEffect(() => {
+    contractInstanceRef.current = contractInstance;
+  }, [contractInstance]);
 
   useEffect(() => {
     setIsMobile(props.isMobile);
@@ -59,7 +65,7 @@ export default function Claim(props){
         });
       }, 7000);
     }
-  }, [connectionDetails, setRepRecipient, setQuery]);
+  }, [connectionDetails, setRepRecipient, setQuery, setContractInstance]);
 
   const changeRecipient = useCallback(async(e) => {
     e.preventDefault();
@@ -84,7 +90,7 @@ export default function Claim(props){
         return;
       });
     }
-  },[getRec, setNewRecValue, setQuery, setNewRecipient, connectionDetails]);
+  }, [getRec, setNewRecValue, setQuery, setNewRecipient, connectionDetails, contractInstance]);
 
   const backToSwitch = useCallback(() => {
     props.toSwitch();

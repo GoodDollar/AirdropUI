@@ -5,8 +5,10 @@ import Typography from "@mui/material/Typography";
 
 import WalletConnectProvider from "@walletconnect/web3-provider";
 const Web3 = require('web3');
-const infuraConfig = require('../../private/infura.config.js');
-let testUrl = infuraConfig.infuraUrl;
+// const infuraConfig = require('../../private/infura.config.js');
+let EthApi = process.env.NEXT_PUBLIC_ETH_HTTPS,
+    EthId = process.env.NEXT_PUBLIC_ETH_ID,
+    FuseApi = process.env.NEXT_PUBLIC_FUSE_HTTPS;
 
 import SwitchAndConnectButton from '../../lib/switchConnectButton.js';
 import ErrorHandler from './ErrorHandler.js';
@@ -70,14 +72,14 @@ export default function Provider(props) {
     let conAddr;
     if (!providerInstanceRef.current && providerName == "MM"){
       // user is not connected yet
-      const web3 = new Web3(Web3.givenProvider || testUrl);
+      const web3 = new Web3(Web3.givenProvider || EthApi);
       conAddr = walletConnect(providerName, web3, claimAddressRef.current);
     } else if (!providerInstanceRef.current && providerName == "WC"){
       const Wc3 = new WalletConnectProvider({
-        infuraId: infuraConfig.infuraId,
+        infuraId: EthId,
         rpc: {
-          1: infuraConfig.infuraUrl,
-          122: infuraConfig.pocketUrl,
+          1: EthApi,
+          122: FuseApi,
         },
       });
       const web3wc = new Web3(Wc3);
