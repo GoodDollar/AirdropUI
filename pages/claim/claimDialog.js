@@ -37,7 +37,11 @@ export default function ClaimDialog(props) {
     let gRep = props.proofData.reputationInWei / 1e18;
     setGRep(gRep);
     setClaimAddress(props.proofData.addr);
-  }, [initClaim]);
+    if (props.proofData.addr !== connectedAddress){
+      setCurrentConnection(null);
+      setConnectedAddress(null);
+    }
+  }, [initClaim, props]);
 
   const handleClose = useCallback(() => {
     onClose();

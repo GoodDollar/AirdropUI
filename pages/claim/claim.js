@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import React, {useState, useEffect, useCallback, useRef} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import Container from "@mui/material/Container";
 import CircularProgress from '@mui/material/CircularProgress';
 import CheckMarkDone from '../../lib/checkMarkDone.js';
@@ -51,8 +51,11 @@ export default function Claim(props){
       setQuery({status: "pending"});
       let pendingTXStatus = setInterval(() => {
         const txStatus = getPendingTXStatus(currentConnection, pendingTXClaim ?? pendingTXNewRec);
-        txStatus.then((res) => {
+        txStatus.then(async(res) => {
           if (res) {
+            const getNewRec = await getRecipient(contractInstance, currentConnection);
+            setContractInstance(getNewRec.contractInstance);
+            setRepRecipient(getNewRec.recipient);
             setQuery({status: "claim-init"});
             clearInterval(pendingTXStatus);
           }
@@ -76,7 +79,6 @@ export default function Claim(props){
           setQuery({status: 'init'});
         } else {
           getRec(connectionDetails);
-          setQuery({status: 'claim-init'});
         }
       }).catch((err) => {
         setNewRecValue('0x00');
