@@ -2,11 +2,14 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import React, {useState, useEffect, useRef, useCallback} from 'react';
+import Grid from "@mui/material/Grid";
+import Divider from "@mui/material/Divider";
 
 import SwitchAndConnectButton from '../../lib/switchConnectButton.js';
 import CircularProgress from '@mui/material/CircularProgress';
 import ErrorHandler from './ErrorHandler.js';
-import {getClaimStatus} from '../../lib/connect.serv.js';
+import {getClaimStatus, formatAddress} from '../../lib/connect.serv.js';
+
 
 const stateChainIds = {
   productionMain: 1,
@@ -30,6 +33,7 @@ export default function Switch(props) {
   const [error, setError] = useState({status: null, code: null});
   const [isClaimed, setIsClaimed] = useState({productionMain: false, production: false});
   const [isMob, setIsMobile] = useState(null);
+  const [displayAddress, setDisplayAddress] = useState(null);
 
   const connectedAddressRef = useRef(connectedAddress);
   const connectedChainRef = useRef(connectedChain);
@@ -51,6 +55,8 @@ export default function Switch(props) {
     setIsMobile(props.isMobile);
     if (props.currentConnection){
       setProviderInstance(props.currentConnection.providerInstance);
+      let address = formatAddress(props.currentConnection.connectedAddress);
+      setDisplayAddress(address);
       setConnectedAddress(props.currentConnection.connectedAddress);
       setChainId(props.currentConnection.chainId);
       if (props.currentConnection.connectedChain == 'unsupported'){
@@ -135,58 +141,81 @@ export default function Switch(props) {
 
   // TODO: maybe change HTML markup. . .
   return (
-    <div>
-      <div>Connected Address:</div>
-      <Typography variant="span" sx={{fontStyle: "italic", 
-                                      fontWeight: "bold",
-                                      fontSize: isMob ? "11px" : "initial"}}>
-        {connectedAddress} 
-      </Typography>
-      <div>----------------------</div>
-     <div>On network: 
-      <Typography variant="span" 
-                  style={{fontWeight: "bold"}}>
-          {connectedChain}            
-      </Typography>
-      </div><br />
-      <Box>   
-        <Typography variant="span">
-          Make sure you are connected to the network for which 
-          you want to claim (Blue): 
+    <Grid container spacing={0.25} sx={{justifyContent: "center"}} columnSpacing={{xs: 0.125}}>
+      <Grid item xs={4} sx={{borderRight: "1px solid rgba(128,128,128,0.4)", 
+                             display:"flex",
+                             flexDirection:"column",
+                             alignItems:"center"}}>
+        <Typography variant="h6" 
+                    gutterBottom 
+                    component="div" 
+                    sx={{fontWeight: "normal", 
+                         mt: 0.25, 
+                         mb: 0.25, 
+                         ml: isMob ? -6.25 : -3.125, 
+                         fontSize: "1rem"}}>
+          Connected Address
         </Typography>
+        <Typography variant="span" sx={{fontStyle: "italic", 
+                                        fontWeight: "bold",
+                                        mr: isMob ? 4 : 0,}}>
+          {displayAddress} 
+        </Typography>
+      </Grid>
+      <Grid item xs={4} sx={{ml:1.6}}>
+        <Typography variant="h6" 
+                        gutterBottom 
+                        component="div" 
+                        sx={{fontWeight: "normal", 
+                             mt: isMob ? 0 : 0.25, 
+                             mb:0.25, 
+                             ml: isMob ? 0 : 3.125, 
+                             fontSize: "1rem"}}>
+          on Network
+        </Typography>
+        <Typography variant="span" 
+                    sx={{fontStyle: "italic", fontWeight: "bold"}}>
+          {connectedChain} 
+        </Typography>
+      </Grid>
+      <Divider />
+      <Typography variant="span" sx={{textAlign: "center", mt: 2}}>
+        Make sure you are connected to the network for which 
+        you want to claim (Blue): 
+      </Typography>
         <br />
-                                 
+      <Grid item xs={4} sx={{display:"flex", justifyContent:"center",alignItems:"center"}}>
+          <SwitchAndConnectButton
+            fullWidth
+            variant="contained"
+            className={` ${chainId == 1 ? "chain-connected" : ""} ` + 
+                      ` ${isClaimed.productionMain ? "chain-claimed" : ""} `
+            }
+            sx={{
+              mt: 3,
+              mb: 2,
+              backgroundImage: `url('/ethereum.svg')`,
+            }}
+            onClick={() => switchNetwork("0x1", "productionMain")}>
+              {isClaimed.productionMain ? <span>Claimed!</span> : ""}
+            </SwitchAndConnectButton>
+      </Grid>
+      <Grid item xs={4} sx={{display:"flex", justifyContent:"center",alignItems:"center"}}>
         <SwitchAndConnectButton
-          fullWidth
-          variant="contained"
-          className={` ${chainId == 1 ? "chain-connected" : ""} ` + 
-                     ` ${isClaimed.productionMain ? "chain-claimed" : ""} `
-          }
-          sx={{
-            mt: 3,
-            mb: 2,
-            backgroundImage: `url('/ethereum.svg')`,
-          }}
-          onClick={() => switchNetwork("0x1", "productionMain")}>
-            {isClaimed.productionMain ? <span>Claimed!</span> : ""}
-          </SwitchAndConnectButton>
-        
-        <SwitchAndConnectButton
-          fullWidth
-          variant="contained"
-          className={` ${chainId == 122 ? "chain-connected" : ""} ` +  
-                     ` ${isClaimed.production ? "chain-claimed" : ""}`
-          }
-          sx={{
-            mt: 3,
-            mb: 2,
-            backgroundImage: `url('/fuse.svg')`
-          }}
-          onClick={() => switchNetwork("0x7a", "production")}>
-            {isClaimed.production ? <span>Claimed!</span>: ""}
-          </SwitchAndConnectButton>
-        
-      </Box>
+            fullWidth
+            variant="contained"
+            className={` ${chainId == 122 ? "chain-connected" : ""} ` +  
+                      ` ${isClaimed.production ? "chain-claimed" : ""}`
+            }
+            sx={{
+              mt: 3,
+              mb: 2,
+              backgroundImage: `url('/fuse.svg')`
+            }}
+            onClick={() => switchNetwork("0x7a", "production")}>
+              {isClaimed.production ? <span>Claimed!</span>: ""}
+            </SwitchAndConnectButton>
+      </Grid>             
       {
         query.status === 'error' && (error.status === "wrongNetwork" || error.status === "alreadyClaimed") ? 
           <ErrorHandler action={error}/>
@@ -197,8 +226,10 @@ export default function Switch(props) {
             alignItems: 'center',
             flexDirection: "column",
           }}>
-            <CircularProgress color="secondary" sx={{marginTop:"20px"}} /> <br />
-            <Typography variant="span" sx={{fontStyle: 'italic'}} color="red">
+            <CircularProgress color="secondary" sx={{marginTop:"20px"}} />
+            <Typography variant="span" sx={{fontStyle: "italic", 
+                                            textAlign:"center", 
+                                            marginTop: "5px"}} color="red">
                 We are checking your reputation balance, please wait a moment.
             </Typography>
           </div>
@@ -219,6 +250,6 @@ export default function Switch(props) {
           </Button>
       </Box>
       }
-    </div>
+    </Grid>
   )
 }

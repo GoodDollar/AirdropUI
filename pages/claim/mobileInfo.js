@@ -18,11 +18,15 @@ import ListItemText from "@mui/material/ListItemText";
 export default function MobileInfo(props) {
   const [isActive, setIsActive] = useState(false);
   const [diaOpen, setOpen] = useState(false);
+  const [initInfo, setInitInfo] = useState(false);
 
   useEffect(() => {
     if (props.isMobile || props.providerName == 'WC'){
-      setIsActive(true);
-      setOpen(true);
+      if (!initInfo){
+        setIsActive(true);
+        setOpen(true);
+        setInitInfo(true);
+      }
     }
   }, [props]);
 
@@ -50,6 +54,7 @@ export default function MobileInfo(props) {
           color: "red",
           float: "right",
           alignSelf: "flex-end",
+          position:"absolute"
     }}>
     <Button sx={{
       textTransform: "lowercase",

@@ -5,8 +5,11 @@ import Typography from "@mui/material/Typography";
 import React, {useState, useEffect, useCallback} from 'react';
 import Container from "@mui/material/Container";
 import CircularProgress from '@mui/material/CircularProgress';
+import Grid from '@mui/material/Grid';
+
+
 import CheckMarkDone from '../../lib/checkMarkDone.js';
-import {setNewRecipient, claimReputation, getRecipient, getPendingTXStatus} from '../../lib/connect.serv.js';
+import {setNewRecipient, claimReputation, getRecipient, getPendingTXStatus, formatAddress} from '../../lib/connect.serv.js';
 
 
 const isEth = /^0x[a-fA-F0-9]{40}$/;
@@ -42,9 +45,10 @@ export default function Claim(props){
     const getRecc = await getRecipient(contractInstance, currentConnection);
     setContractInstance(getRecc.contractInstance);
     const emptyAddress = /^0x0+$/.test(getRecc.recipient);
-    let recipient = emptyAddress ? currentConnection.connectedAddress : getRecc.recipient;
-    setRepRecipient(recipient);
+    let recipient = emptyAddress ? currentConnection.connectedAddress : getRecc.recipient,
+        formatRecipient = formatAddress(recipient);
 
+    setRepRecipient(formatRecipient);
     let pendingTXClaim = JSON.parse(localStorage.getItem('pendingClaim')),
         pendingTXNewRec = JSON.parse(localStorage.getItem('pendingNewRec'));
     if (pendingTXClaim || pendingTXNewRec) {
@@ -54,8 +58,9 @@ export default function Claim(props){
         txStatus.then(async(res) => {
           if (res) {
             const getNewRec = await getRecipient(contractInstance, currentConnection);
+            let recipient = formatAddress(getNewRec.recipient);
             setContractInstance(getNewRec.contractInstance);
-            setRepRecipient(getNewRec.recipient);
+            setRepRecipient(recipient);
             setQuery({status: "claim-init"});
             clearInterval(pendingTXStatus);
           }
@@ -118,7 +123,9 @@ export default function Claim(props){
   return (
     <Container component="claim">
       <Box sx={{
-        mb: 3,
+        mb: 4,
+        display: "flex",
+        justifyContent:"center"
       }}>
         <Button 
           variant="contained"
@@ -140,27 +147,35 @@ export default function Claim(props){
                 backgroundColor: "#9c27b0",
                 '&:hover': {
                   backgroundColor: "#60156c"
-                }
+                },
+                mb: isMob ? 1 : 0,
               }}
               onClick={backToRecipient}
             >Change Recipient</Button>
           : null
         }
       </Box>
-      <Typography paragraph={true}>
-        Connected Network: <br />
-        <Typography variant="span" sx={{fontWeight: 'bold'}}>
-          {connectionDetails.connectedChain}
-        </Typography>      
-      </Typography>
-      <Typography paragraph={true}>
-        You will receive your tokens on address: <br />
-        <Typography variant="span" sx={{fontWeight: 'bold', 
-                                        fontStyle: 'italic',
-                                        fontSize: isMob ? "11px" : "initial"}}>
-          {repRecipient}
-        </Typography>
-      </Typography>
+      <Grid container spacing={2} sx={{justifyContent:"center", marginLeft: "-32px"}}>
+        <Grid item sx={4} 
+              sx={{
+                borderRight: '1px solid rgba(128,128,128,0.4)', 
+                paddingRight: "8px"}}>
+          <Typography paragraph={true}>
+            Connected Network <br />
+            <Typography variant="span" sx={{fontWeight: 'bold'}}>
+              {connectionDetails.connectedChain}
+            </Typography>      
+          </Typography>
+        </Grid>
+        <Grid item sx={4}>
+          <Typography paragraph={true}>
+            Recipient <br />
+            <Typography variant="span" sx={{fontWeight: 'bold'}}>
+              {repRecipient}
+            </Typography>
+          </Typography>
+        </Grid>
+      </Grid>
       {
         query.status === 'init' ?
           <div>
@@ -169,11 +184,11 @@ export default function Claim(props){
             onSubmit={changeRecipient}
             sx={{mt: 1}}
             >
-            <Typography paragraph={true}>
+            <Typography paragraph={true} sx={{textAlign:"center"}}>
               If you want to receive your GOOD tokens on a different address, 
               set a new recipient below.
             </Typography>
-            <Typography variant="span" color="red">
+            <Typography paragraph={true} sx={{textAlign:"center", mb: 0}} color="red">
               REMEMBER TO ONLY USE ADDRESSESS WHICH ARE YOUR OWN AND SUPPORT ERC-20's
             </Typography>
             <div style={{
@@ -197,7 +212,7 @@ export default function Claim(props){
                 sx={{
                   fontSize: '13px', 
                   mt: 3, 
-                  mb: 2,
+                  mb: (!isEth.test(newRecValue) ? 7.5 : 2),
                   backgroundColor: "#00C3AE", 
                   '&:hover': {
                     backgroundColor: "#049484"
@@ -209,7 +224,7 @@ export default function Claim(props){
           </Box>
           <Button
               variant="contained"
-              sx={{ mt: 3, mb: 2}}
+              sx={{ mt: 0.5, mb: 2}}
               onClick={skipAndClaim}
             >Skip</Button>
           </div>

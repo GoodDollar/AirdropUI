@@ -27,11 +27,6 @@ export default function ClaimDialog(props) {
   const [providerName, setProviderName] = useState('init');
 
   const isMobile = isMobileHook();
-
-  const queryRef = useRef(query);
-  useEffect(() => {
-    queryRef.current = query;
-  }, [query])
   
   useEffect(() => {
     let gRep = props.proofData.reputationInWei / 1e18;
@@ -44,8 +39,11 @@ export default function ClaimDialog(props) {
   }, [initClaim, props]);
 
   const handleClose = useCallback(() => {
+    if (query.status == 'disconnect'){
+      setQuery({status: 'init'});
+    }
     onClose();
-  }, [onClose]);
+  }, [onClose, query]);
 
   useEffect(() => {
     if (providerEvents.status == 'init') {
@@ -90,6 +88,7 @@ export default function ClaimDialog(props) {
 
         currentConnection.providerInstance.currentProvider.on("disconnect", (code, res) =>{
           // code 1000 == disconnect
+          console.log('test');
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           let status = {status: 'disconnect', code: 313};
           setQuery(status);
@@ -109,9 +108,9 @@ export default function ClaimDialog(props) {
       setQuery(res);
       setConnectedAddress(null);
       setProviderName('init');
-    } else {
+    } else {      
       setCurrentConnection(res);
-      setProviderEvents({status: 'init'}); 
+      setProviderEvents({status: 'init'});
       setConnectedAddress(res.connectedAddress);
       setProviderName(res.providerName);
       setQuery({status: 'connected'});
@@ -135,12 +134,12 @@ export default function ClaimDialog(props) {
           height: "max-content",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center"
+          alignItems: "center",
         }}>
 
-          <MobileInfo isMobile={isMobile} providerName={providerName}/>
+          <MobileInfo isMobile={isMobile} providerName={providerName} initClaim={initClaim}/>
         
-        <DialogTitle>You have {gRep} GOOD Tokens to claim!</DialogTitle>
+        <DialogTitle sx={{fontStyle:"italic", mt: 1, pt:0}}>You have {gRep} GOOD Tokens to claim!</DialogTitle>
         { !connectedAddress || query.status === 'disconnect' ?
             <Provider claimAddress={claimAddress} 
                       setConnection={connectionHandler}
