@@ -6,6 +6,12 @@ import React, {useState, useEffect, useCallback} from 'react';
 import Container from "@mui/material/Container";
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
+import Paper from "@mui/material/Paper";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
+import Avatar from "@mui/material/Avatar";
 
 
 import CheckMarkDone from '../../lib/checkMarkDone.js';
@@ -121,7 +127,7 @@ export default function Claim(props){
   }, [connectionDetails, contractInstance, setQuery]);
 
   return (
-    <Container component="claim">
+    <Container component="claim" sx={{display: "flex", alignItems: "center", flexDirection:"column"}}>
       <Box sx={{
         mb: 4,
         display: "flex",
@@ -155,26 +161,56 @@ export default function Claim(props){
           : null
         }
       </Box>
-      <Grid container spacing={2} sx={{justifyContent:"center", marginLeft: "-32px"}}>
-        <Grid item sx={4} 
-              sx={{
-                borderRight: '1px solid rgba(128,128,128,0.4)', 
-                paddingRight: "8px"}}>
-          <Typography paragraph={true}>
-            Connected Network <br />
-            <Typography variant="span" sx={{fontWeight: 'bold'}}>
-              {connectionDetails.connectedChain}
-            </Typography>      
-          </Typography>
-        </Grid>
-        <Grid item sx={4}>
-          <Typography paragraph={true}>
-            Recipient <br />
-            <Typography variant="span" sx={{fontWeight: 'bold'}}>
-              {repRecipient}
+      <Grid container spacing={2} sx={{justifyContent:"center", ml: 0}}>
+        <Paper sx={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100px"
+        }}>
+          <Grid item xs={6} 
+                sx={{
+                  borderRight: '1px solid rgba(128,128,128,0.4)', 
+                  paddingRight: "8px",
+                  display: "flex",
+                  flexDirection: "column",
+                  height: "70%"}}>
+            <List sx={{padding: 0}}>
+              <ListItem sx={{flexDirection: "column-reverse", 
+                             padding: 0, 
+                             marginLeft: isMob ? "14px" : 0}}>
+                <ListItemAvatar sx={{display: "flex", justifyContent: "center"}}>
+                  <Avatar sx={{mr:0, paddingRight:0}}>
+                    <Box sx={{background: connectionDetails.chainId == 122 ? "url(/fuse.svg)" : "url(/ethereum.svg)",
+                          width: "50px",
+                          height: "50px",
+                          backgroundRepeat: "no-repeat",
+                          backgroundSize: connectionDetails.chainId == 122 ? "100px" : "70px",
+                          backgroundPosition: connectionDetails.chainId == 122 ? "10px 8px" : "-15px 10px",
+                          display: "flex",
+                          justifySelf: "center",
+                          alignSelf: "center",
+                          borderRadius: "5px"
+                    }}/>
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText primary={"Network"}></ListItemText>
+              </ListItem>
+            </List>
+          </Grid>
+          <Grid item xs={6}>
+            <Typography paragraph={true} 
+                        sx={{paddingLeft: isMob ? "10px" : "40px", 
+                             height: "60px", 
+                             mb:0}}>
+              Recipient <br />
+              <Typography variant="span" sx={{fontWeight: 'bold'}}>
+                {repRecipient}
+              </Typography>
             </Typography>
-          </Typography>
-        </Grid>
+          </Grid>
+        </Paper>
       </Grid>
       {
         query.status === 'init' ?
@@ -182,14 +218,15 @@ export default function Claim(props){
             <Box
             component="form"
             onSubmit={changeRecipient}
-            sx={{mt: 1}}
+            sx={{mt: 3}}
             >
             <Typography paragraph={true} sx={{textAlign:"center"}}>
-              If you want to receive your GOOD tokens on a different address, 
-              set a new recipient below.
+            Set a different recipient for your GOOD tokens.<br />
+            Notice: every future GOOD minted to {repRecipient}  <br />
+            will be minted instead to the new recipient until you change it back.
             </Typography>
             <Typography paragraph={true} sx={{textAlign:"center", mb: 0}} color="red">
-              REMEMBER TO ONLY USE ADDRESSESS WHICH ARE YOUR OWN AND SUPPORT ERC-20's
+              REMEMBER TO ONLY USE ADDRESSESS WHICH SUPPORT ERC-20's
             </Typography>
             <div style={{
               display: 'flex',
@@ -245,7 +282,8 @@ export default function Claim(props){
           <Box sx={{
             display: 'flex',
             alignItems: 'center',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            mt: 3
           }}>
             <CheckMarkDone 
               className={`${query.status === 'claim-success' ||  
