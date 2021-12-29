@@ -159,7 +159,8 @@ export default function Switch(props) {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                height: "100px"
+                height: "100px",
+                border: "1px solid rgba(128,128,128,0.26)"
         }}>
           <Grid item xs={isMob ? 6 : 4} sx={{borderRight: "1px solid rgba(128,128,128,0.4)", 
                               display:"flex",

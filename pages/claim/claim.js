@@ -170,7 +170,8 @@ export default function Claim(props){
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                height: "100px"
+                height: "100px",
+                border: "1px solid rgba(128,128,128,0.26)"
         }}>
           <Grid item xs={6} 
                 sx={{

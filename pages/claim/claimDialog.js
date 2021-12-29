@@ -134,11 +134,12 @@ export default function ClaimDialog(props) {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          // borderLeft: "11px solid #1976d2"
         }}>
 
           <MobileInfo isMobile={isMobile} providerName={providerName} initClaim={initClaim}/>
         
-        <DialogTitle sx={{fontStyle:"italic", mt: 1, pt:0}}>You have {gRep} GOOD Tokens to claim!</DialogTitle>
+        <DialogTitle sx={{fontStyle:"italic", mt: 1, pt:0, width: "80%"}}>You have {gRep} GOOD Tokens to claim!</DialogTitle>
         { !connectedAddress || query.status === 'disconnect' ?
             <Provider claimAddress={claimAddress} 
                       setConnection={connectionHandler}

@@ -259,7 +259,7 @@ export default function SignIn() {
       {/* Claim-Logic Below */}
       <Container component="claim" maxWidth="xs"
         sx={{
-          position: "absolute",
+          position: "relative",
           top: 0,
           right: "230px",
           height: "100%",
