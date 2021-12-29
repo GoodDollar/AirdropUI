@@ -33,6 +33,7 @@ export default function Claim(props){
         useState({connectedChain: null, connectedAddress: null});
   const [query, setQuery] = useState({status: 'init'});
   const [repRecipient, setRepRecipient] = useState(null);
+  const [repRecipientFormat, setRepRecipientFormat] = useState(null);
   const [contractInstance, setContractInstance] = useState(null);
   const [isMob, setIsMobile] = useState(null);
   const [newRecValue, setNewRecValue] = useState(null);
@@ -54,7 +55,8 @@ export default function Claim(props){
     let recipient = emptyAddress ? currentConnection.connectedAddress : getRecc.recipient,
         formatRecipient = formatAddress(recipient);
 
-    setRepRecipient(formatRecipient);
+    setRepRecipient(recipient);
+    setRepRecipientFormat(formatRecipient);
     let pendingTXClaim = JSON.parse(localStorage.getItem('pendingClaim')),
         pendingTXNewRec = JSON.parse(localStorage.getItem('pendingNewRec'));
     if (pendingTXClaim || pendingTXNewRec) {
@@ -66,18 +68,19 @@ export default function Claim(props){
             const getNewRec = await getRecipient(contractInstance, currentConnection);
             let recipient = formatAddress(getNewRec.recipient);
             setContractInstance(getNewRec.contractInstance);
-            setRepRecipient(recipient);
+            setRepRecipient(getNewRec.recipient);
+            setRepRecipientFormat(recipient);
             setQuery({status: "claim-init"});
             clearInterval(pendingTXStatus);
           }
         });
       }, 7000);
     }
-  }, [connectionDetails, setRepRecipient, setQuery, setContractInstance]);
+  }, [connectionDetails, setRepRecipientFormat, setRepRecipient, setQuery, setContractInstance]);
 
   const changeRecipient = useCallback(async(e) => {
     e.preventDefault();
-    if (!isEth.test(e.target[0].value || formatAddress(e.target[0].value) == repRecipient)){
+    if (!isEth.test(e.target[0].value || e.target[0].value == repRecipient)){
       return;
     } else {
       let newRecipient = e.target[0].value;
@@ -206,7 +209,7 @@ export default function Claim(props){
                              mb:0}}>
               Recipient <br />
               <Typography variant="span" sx={{fontWeight: 'bold'}}>
-                {repRecipient}
+                {repRecipientFormat}
               </Typography>
             </Typography>
           </Grid>
@@ -222,7 +225,7 @@ export default function Claim(props){
             >
             <Typography paragraph={true} sx={{textAlign:"center"}}>
             Set a different recipient for your GOOD tokens.<br />
-            Notice: every future GOOD minted to <b>{repRecipient}</b>  <br />
+            Notice: every future GOOD minted to <b>{repRecipientFormat}</b>  <br />
             will be minted instead to the new recipient until you change it back.
             </Typography>
             <Typography paragraph={true} sx={{textAlign:"center", mb: 0}} color="red">
@@ -234,10 +237,10 @@ export default function Claim(props){
               alignItems: 'center'
             }}>
               <TextField
-                error={!isEth.test(newRecValue) || formatAddress(newRecValue) == repRecipient}
+                error={!isEth.test(newRecValue) || newRecValue == repRecipient}
                 helperText={!isEth.test(newRecValue) ? 
                             "This is either not a ETH address, or it doesn't exist." : 
-                            formatAddress(newRecValue) == repRecipient ? 
+                            newRecValue == repRecipient ? 
                             "This address is the current recipient." :
                             ''}
                 margin="normal"
@@ -254,7 +257,7 @@ export default function Claim(props){
                   fontSize: '13px', 
                   mt: 3, 
                   mb: (!isEth.test(newRecValue) ||
-                       formatAddress(newRecValue) == repRecipient ? 7.5 : 2),
+                       newRecValue == repRecipient ? 7.5 : 2),
                   backgroundColor: "#00C3AE", 
                   '&:hover': {
                     backgroundColor: "#049484"
