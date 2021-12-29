@@ -84,14 +84,19 @@ export default function Switch(props) {
     setQuery({status: 'get-claim-status'});
     const claimStatus = getClaimStatus(currentConnection);
     claimStatus.then((res) => {
-      setIsClaimed(res);
-      for (const [stateId, status] of Object.entries(res)){
-        if (status && currentConnection.chainId == stateChainIds[stateId]){
-          setError({status: 'alreadyClaimed', code: 318});
-          setQuery({status: 'error'});
-          break;
-        } else {
-          setQuery({status: 'idle'});
+      if (!res) {
+        setError({status: 'connectionError', code: 319});
+        setQuery({status: 'error'});
+      } else {
+        setIsClaimed(res);
+        for (const [stateId, status] of Object.entries(res)){
+          if (status && currentConnection.chainId == stateChainIds[stateId]){
+            setError({status: 'alreadyClaimed', code: 318});
+            setQuery({status: 'error'});
+            break;
+          } else {
+            setQuery({status: 'idle'});
+          }
         }
       }
     });
@@ -254,7 +259,9 @@ export default function Switch(props) {
             </SwitchAndConnectButton>
       </Grid>             
       {
-        query.status === 'error' && (error.status === "wrongNetwork" || error.status === "alreadyClaimed") ? 
+        query.status === 'error'  && (error.status === "wrongNetwork" 
+                                  || error.status === "alreadyClaimed"
+                                  || error.status === "connectionError" ) ? 
           <ErrorHandler action={error}/>
         :
         query.status === 'get-claim-status' ?

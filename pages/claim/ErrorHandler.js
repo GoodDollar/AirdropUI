@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 
 const ErrorSpan = ({message}) => {
   return (
-      <Typography variant="span" color="red">
+      <Typography variant="span" color="red" sx={{textAlign:"center"}}>
           {message}
       </Typography> 
   );
@@ -26,7 +26,8 @@ export default function ErrorHandler(props) {
     wrongAddress: 'Sorry, you are not connected to the right address. '+ 
                   'Please disconnect first, then retry with the eligible address.',
     disconnect: 'You have disconnected from the dapp.',
-    alreadyClaimed: 'You have already claimed your GOOD for this network'
+    alreadyClaimed: 'You have already claimed your GOOD for this network',
+    connectionError: ' Please try again later. If the problem persists, contact GoodDollar support on Discord/Telegram.'
   }
 
   let statusCodes = {4001: 'cancelled',
@@ -35,7 +36,8 @@ export default function ErrorHandler(props) {
                      310: 'wrongNetwork',
                      312: 'wrongAddress', 
                      313: 'disconnect',
-                     318: 'alreadyClaimed'}
+                     318: 'alreadyClaimed',
+                     319: 'connectionError'}
 
   let withTimeOut = ['cancelled', 'pending', 'disconnect'].join(":");
 

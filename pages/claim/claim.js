@@ -222,7 +222,7 @@ export default function Claim(props){
             >
             <Typography paragraph={true} sx={{textAlign:"center"}}>
             Set a different recipient for your GOOD tokens.<br />
-            Notice: every future GOOD minted to {repRecipient}  <br />
+            Notice: every future GOOD minted to <b>{repRecipient}</b>  <br />
             will be minted instead to the new recipient until you change it back.
             </Typography>
             <Typography paragraph={true} sx={{textAlign:"center", mb: 0}} color="red">

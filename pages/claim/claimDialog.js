@@ -88,7 +88,6 @@ export default function ClaimDialog(props) {
 
         currentConnection.providerInstance.currentProvider.on("disconnect", (code, res) =>{
           // code 1000 == disconnect
-          console.log('test');
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           let status = {status: 'disconnect', code: 313};
           setQuery(status);
@@ -151,9 +150,12 @@ export default function ClaimDialog(props) {
                     getRep={getReputation}
                     isMobile={isMobile} />
           :
+          query.status !== 'init' ?
             <Claim proofData={props.proofData} currentConnection={currentConnection}
                    toSwitch={backToSwitch}
                    isMobile={isMobile} />
+          :
+          null
         }
       </DialogContent>
     </Dialog>
