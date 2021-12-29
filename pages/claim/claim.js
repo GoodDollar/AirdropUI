@@ -77,7 +77,7 @@ export default function Claim(props){
 
   const changeRecipient = useCallback(async(e) => {
     e.preventDefault();
-    if (!isEth.test(e.target[0].value)){
+    if (!isEth.test(e.target[0].value || formatAddress(e.target[0].value) == repRecipient)){
       return;
     } else {
       let newRecipient = e.target[0].value;
@@ -234,8 +234,12 @@ export default function Claim(props){
               alignItems: 'center'
             }}>
               <TextField
-                error={!isEth.test(newRecValue)}
-                helperText={!isEth.test(newRecValue) ? "This is either not a ETH address, or it doesn't exist" : ''}
+                error={!isEth.test(newRecValue) || formatAddress(newRecValue) == repRecipient}
+                helperText={!isEth.test(newRecValue) ? 
+                            "This is either not a ETH address, or it doesn't exist." : 
+                            formatAddress(newRecValue) == repRecipient ? 
+                            "This address is the current recipient." :
+                            ''}
                 margin="normal"
                 required
                 id="newRecipient"
@@ -249,7 +253,8 @@ export default function Claim(props){
                 sx={{
                   fontSize: '13px', 
                   mt: 3, 
-                  mb: (!isEth.test(newRecValue) ? 7.5 : 2),
+                  mb: (!isEth.test(newRecValue) ||
+                       formatAddress(newRecValue) == repRecipient ? 7.5 : 2),
                   backgroundColor: "#00C3AE", 
                   '&:hover': {
                     backgroundColor: "#049484"
