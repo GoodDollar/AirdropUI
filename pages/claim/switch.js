@@ -4,19 +4,11 @@ import Typography from "@mui/material/Typography";
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
-import Paper from "@mui/material/Paper";
-
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemAvatar from "@mui/material/ListItemAvatar";
-import Avatar from "@mui/material/Avatar";
-
 
 import SwitchAndConnectButton from '../../lib/switchConnectButton.js';
 import CircularProgress from '@mui/material/CircularProgress';
 import ErrorHandler from './ErrorHandler.js';
-import {getClaimStatus, formatAddress} from '../../lib/connect.serv.js';
+import {getClaimStatus} from '../../lib/connect.serv.js';
 
 
 const stateChainIds = {
@@ -40,8 +32,6 @@ export default function Switch(props) {
   const [query, setQuery] = useState({status: null});
   const [error, setError] = useState({status: null, code: null});
   const [isClaimed, setIsClaimed] = useState({productionMain: false, production: false});
-  const [isMob, setIsMobile] = useState(null);
-  const [displayAddress, setDisplayAddress] = useState(null);
 
   const connectedAddressRef = useRef(connectedAddress);
   const connectedChainRef = useRef(connectedChain);
@@ -60,11 +50,8 @@ export default function Switch(props) {
   }, [connectedChain]);
 
   useEffect(() => {
-    setIsMobile(props.isMobile);
     if (props.currentConnection){
       setProviderInstance(props.currentConnection.providerInstance);
-      let address = formatAddress(props.currentConnection.connectedAddress);
-      setDisplayAddress(address);
       setConnectedAddress(props.currentConnection.connectedAddress);
       setChainId(props.currentConnection.chainId);
       if (props.currentConnection.connectedChain == 'unsupported'){
@@ -76,7 +63,7 @@ export default function Switch(props) {
         alreadyClaimed(props.currentConnection);
       }
     }
-  }, [props]);
+  }, [props.currentConnection]);
 
   // if user has already claimed for network X, and this is the current connection,
   // this shows error message and removes/hides button for claiming
@@ -130,7 +117,7 @@ export default function Switch(props) {
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: chainId}]
       }).catch((err) => {
-        // console.log('err switch -->', err);
+        // console.log({err});
         if (err.code == 4902){
           addFuseNetwork(chainId);
         } else {
@@ -154,67 +141,6 @@ export default function Switch(props) {
 
   return (
     <Grid container spacing={0.25} sx={{justifyContent: "center"}} columnSpacing={{xs: 0.125}}>
-        <Paper sx={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100px",
-                border: "1px solid rgba(128,128,128,0.26)"
-        }}>
-          <Grid item xs={isMob ? 6 : 4} sx={{borderRight: "1px solid rgba(128,128,128,0.4)", 
-                              display:"flex",
-                              flexDirection:"column",
-                              alignItems:"center",
-                              height: "70%"}}>
-            <Typography variant="h6" 
-                        gutterBottom 
-                        component="div" 
-                        sx={{fontWeight: "normal", 
-                            mt: 0.25, 
-                            mb: 0.25, 
-                            ml: isMob ? -6.25 : -3.125, 
-                            fontSize: "1rem"}}>
-              Connected Address
-            </Typography>
-            <Typography variant="span" sx={{fontStyle: "italic", 
-                                            fontWeight: "bold",
-                                            mr: isMob ? 4 : 0.5,
-                                            mt: 0.5,
-                                            paddingRight: "32px",
-            }}>
-              {displayAddress} 
-            </Typography>
-          </Grid>
-        <Grid item xs={isMob ? 2 : 4} 
-              flexDirection={"column"}
-              sx={{
-                ml:1.6,
-                display: "flex"
-                }}>
-          
-          <List>
-            <ListItem sx={{flexDirection: "column-reverse", padding: 0, ml: 1.5}}>
-              <ListItemAvatar sx={{display: "flex", justifyContent: "center"}}>
-                <Avatar sx={{mr:0, paddingRight: 0}}>
-                  <Box sx={{background: chainId == 122 ? "url(/fuse.svg)" : "url(/ethereum.svg)",
-                        width: "50px",
-                        height: "50px",
-                        backgroundRepeat: "no-repeat",
-                        backgroundSize: chainId == 122 ? "100px" : "70px",
-                        backgroundPosition: chainId == 122 ? "8px 10px" : "-15px 10px",
-                        display: "flex",
-                        justifySelf: "center",
-                        alignSelf: "center",
-                        borderRadius: "5px"
-                  }} />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText primary={"Network"} />
-            </ListItem>
-            </List>
-        </Grid>
-      </Paper>
       <Divider />
       <Grid item xs={12}>
         <Typography variant="span" sx={{textAlign: "center", 
@@ -224,7 +150,7 @@ export default function Switch(props) {
                                         justifyContent: "center",
                                         alignItems: "center",
         }}>
-          You can switch the network below
+          {connectedChainRef.current} is your current selected network
         </Typography>
       </Grid>
       <Grid item xs={4} sx={{display:"flex", justifyContent:"center",alignItems:"center"}}>
@@ -279,21 +205,23 @@ export default function Switch(props) {
             </Typography>
           </div>
         :
-        <Box>
-          <Button
-            fullWidth
-            variant="contained"
-            sx={{
-              mt: 3, 
-              mb: 2, 
-              backgroundColor: "#00C3AE", 
-                '&:hover': {
-                  backgroundColor: "#049484"
-            }}}
-            onClick={getReputation}>
-              Claim your tokens
-          </Button>
-      </Box>
+        <Grid item xs={8}>
+          <Box>
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{
+                mt: 3, 
+                mb: 2, 
+                backgroundColor: "#1976d2", 
+                  '&:hover': {
+                    backgroundColor: "#1565c0"
+              }}}
+              onClick={getReputation}>
+                Next
+            </Button>
+          </Box>
+        </Grid>
       }
     </Grid>
   )

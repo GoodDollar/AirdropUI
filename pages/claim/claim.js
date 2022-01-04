@@ -13,10 +13,8 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Avatar from "@mui/material/Avatar";
 
-
 import CheckMarkDone from '../../lib/checkMarkDone.js';
 import {setNewRecipient, claimReputation, getRecipient, getPendingTXStatus, formatAddress} from '../../lib/connect.serv.js';
-
 
 const isEth = /^0x[a-fA-F0-9]{40}$/;
 
@@ -24,8 +22,7 @@ const isEth = /^0x[a-fA-F0-9]{40}$/;
  * Claim component. For setting a new recipient (optional), 
  * and claim the GOOD tokens for connected network
  * @param props contains: proofData array, currentConnection Object, callback backToSwitch, 
- * isMobile boolean
- * 
+ * isMobile boolean 
  */
 export default function Claim(props){
   const [proof, setProof] = useState(null);
@@ -37,6 +34,7 @@ export default function Claim(props){
   const [contractInstance, setContractInstance] = useState(null);
   const [isMob, setIsMobile] = useState(null);
   const [newRecValue, setNewRecValue] = useState(null);
+  const [changeRecOpen, setChangeRecOpen] = useState(false);
 
   useEffect(() => {
     setIsMobile(props.isMobile);
@@ -107,10 +105,13 @@ export default function Claim(props){
   },[props.toSwitch]);
 
   const backToRecipient = useCallback(() => {
+    props.updateStep('step3');
     setQuery({status: 'init'});
+    showChangeRecipient(changeRecOpen);
   }, [setQuery]);
 
   const skipAndClaim = useCallback(() => {
+    props.updateStep('step4');
     getRec(connectionDetails);
     setQuery({status: 'claim-init'});
   }, [connectionDetails, setQuery, getRec]);
@@ -129,62 +130,44 @@ export default function Claim(props){
     }
   }, [connectionDetails, contractInstance, setQuery]);
 
+  const showChangeRecipient = useCallback((status) => {
+    setChangeRecOpen(!status);
+  }, [setChangeRecOpen]);
+
   return (
-    <Container component="claim" sx={{display: "flex", alignItems: "center", flexDirection:"column"}}>
-      <Box sx={{
-        mb: 4,
-        display: "flex",
-        justifyContent:"center"
-      }}>
-        <Button 
-          variant="contained"
-          sx={{
-            mr: 1,
-            mb: isMob ? 1 : 0,
-            backgroundColor: "#9c27b0",
-           '&:hover': {
-              backgroundColor: "#60156c"
-            }
-          }}
-          onClick={backToSwitch}
-        >Switch Network</Button>
-        {
-          query.status === "claim-init" ?
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "#9c27b0",
-                '&:hover': {
-                  backgroundColor: "#60156c"
-                },
-                mb: isMob ? 1 : 0,
-              }}
-              onClick={backToRecipient}
-            >Change Recipient</Button>
-          : null
-        }
-      </Box>
-      <Grid container spacing={2} sx={{justifyContent:"center", ml: 0}}>
+    <Container component="claim" sx={{display: "flex", alignItems: "center", flexDirection:"column", mt: 4}}>
+      <Grid container spacing={2} sx={{justifyContent:"center", 
+                                       ml: 0,
+                                       width: isMob ? "110%" : "inherit"}}>
         <Paper sx={{
                 width: "100%",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                height: "100px",
-                border: "1px solid rgba(128,128,128,0.26)"
+                border: "1px solid rgba(128,128,128,0.26)",
+                paddingTop: 3,
+                paddingBottom: 3
         }}>
           <Grid item xs={6} 
                 sx={{
                   borderRight: '1px solid rgba(128,128,128,0.4)', 
-                  paddingRight: "8px",
+                  padding: 0,
                   display: "flex",
                   flexDirection: "column",
-                  height: "70%"}}>
-            <List sx={{padding: 0}}>
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "max-content",
+                  }}>
+            <List sx={{padding: 0,
+                       display: "flex",
+                       flexDirection: "column",
+                       justifyContent: "center",
+                       alignItems: "center",
+                       width: "max-content"}}>
               <ListItem sx={{flexDirection: "column-reverse", 
-                             padding: 0, 
-                             marginLeft: isMob ? "14px" : 0}}>
-                <ListItemAvatar sx={{display: "flex", justifyContent: "center"}}>
+                              padding: 0,
+                              margin: 0}}>
+                <ListItemAvatar sx={{display: "flex", justifyContent: "center", height: "50px"}}>
                   <Avatar sx={{mr:0, paddingRight:0}}>
                     <Box sx={{background: connectionDetails.chainId == 122 ? "url(/fuse.svg)" : "url(/ethereum.svg)",
                           width: "50px",
@@ -199,25 +182,77 @@ export default function Claim(props){
                     }}/>
                   </Avatar>
                 </ListItemAvatar>
-                <ListItemText primary={"Network"}></ListItemText>
+                <ListItemText primary={"Network"} sx={{margin: 0, 
+                                                       padding: 0, 
+                                                       paddingBottom: "10px"}}>
+                </ListItemText>
+              </ListItem>
+              <ListItem sx={{margin: 0, padding: 0}}>
+                <Box sx={{display: "flex", justifyContent:"center"}}>
+                  <Button variant="contained"
+                      sx={{margin: 0,
+                        mb: isMob ? 1 : 0,
+                        backgroundColor: "#9c27b0",
+                        '&:hover': {
+                          backgroundColor: "#60156c"
+                        },
+                        fontSize: isMob ? "11px" : "12px"
+                      }}
+                      onClick={backToSwitch}>Switch Network</Button>
+
+                </Box>
               </ListItem>
             </List>
           </Grid>
-          <Grid item xs={6}>
-            <Typography paragraph={true} 
-                        sx={{paddingLeft: isMob ? "10px" : "40px", 
-                             height: "60px", 
-                             mb:0}}>
-              Recipient <br />
-              <Typography variant="span" sx={{fontWeight: 'bold'}}>
-                {repRecipientFormat}
-              </Typography>
-            </Typography>
+          <Grid item xs={6} sx={{height: "max-content",
+                                 display: "flex",
+                                 justifyContent: "center",
+                                 alignItems: "center"}}>
+            <List sx={{padding: 0,
+                       display: "flex",
+                       flexDirection: "column"}}>
+              <ListItem sx={{padding: 0, flexDirection: "column"}}>
+                <Typography paragraph={true} 
+                            sx={{padding: 0,
+                                 paddingLeft: 0, 
+                                 height: "max-content", 
+                                 mb:0,
+                                 paddingBottom: "10px"}}>
+                  Recipient <br />
+                </Typography>
+                <Typography paragraph={true} sx={{fontWeight: "bold",
+                                                  margin: 0,
+                                                  padding: 0,
+                                                  height: "50px",
+                                                  pt: 0.5
+                                                  }}>
+                  {repRecipientFormat}
+                </Typography>
+              </ListItem>
+              <ListItem sx={{margin: 0, padding: 0}}>
+                <Button
+                    variant="contained"
+                    sx={{
+                      mr: 1,
+                      mb: isMob ? 1 : 0,
+                      backgroundColor: "#9c27b0",
+                        '&:hover': {
+                            backgroundColor: "#60156c"
+                      },
+                      fontSize: isMob ? "11px" : "12px"
+                    }}
+                    onClick={query.status == 'claim-init' ?
+                            backToRecipient : 
+                            () => showChangeRecipient(changeRecOpen) 
+                    }
+                    >Change Recipient</Button>
+              </ListItem> 
+            </List>
           </Grid>
         </Paper>
       </Grid>
       {
-        query.status === 'init' ?
+        query.status === 'init' && changeRecOpen ?
           <div>
             <Box
             component="form"
@@ -256,7 +291,7 @@ export default function Claim(props){
                 variant="contained"
                 sx={{
                   fontSize: '13px', 
-                  mt: 3, 
+                  mt: isMob ? 0.5 : 3, 
                   mb: (!isEth.test(newRecValue) ||
                        newRecValue == repRecipient ? 7.5 : 2),
                   backgroundColor: "#00C3AE", 
@@ -265,14 +300,14 @@ export default function Claim(props){
                   }
                 }}
                 >Set New Recipient</Button>
-
             </div>
           </Box>
           <Button
               variant="contained"
-              sx={{ mt: 0.5, mb: 2}}
+              sx={{ mt: 4, mb: 2}}
               onClick={skipAndClaim}
-            >Skip</Button>
+            >Next
+          </Button>
           </div>
         :
         query.status === 'pending' ?
@@ -287,7 +322,7 @@ export default function Claim(props){
             </Typography>
           </div> 
         :
-        query.status !== 'claim-init' ?
+        query.status == 'claim-start' ?
           <Box sx={{
             display: 'flex',
             alignItems: 'center',
@@ -316,23 +351,31 @@ export default function Claim(props){
             </Typography>
           </Box>
 
-        :   
-        <Box>
+        :
+        query.status == 'init' ? 
           <Button
-            variant="contained"
-            fullWidth
-            sx={{
-              mt:3, 
-              mb:2,
-              backgroundColor: "#00C3AE", 
-                '&:hover': {
-                  backgroundColor: "#049484"
-                }
-            }}
-            onClick={claimRep}
-          > claim your tokens
+              variant="contained"
+              sx={{ mt: 4, mb: 2}}
+              onClick={skipAndClaim}
+            >Next
           </Button>
-        </Box>
+        :   
+          <Box>
+            <Button
+              variant="contained"
+              fullWidth
+              sx={{
+                mt:3, 
+                mb:2,
+                backgroundColor: "#00C3AE", 
+                  '&:hover': {
+                    backgroundColor: "#049484"
+                  }
+              }}
+              onClick={claimRep}
+            > claim your tokens
+            </Button>
+          </Box>
       }
     </Container> 
   )
