@@ -32,7 +32,6 @@ export default function Switch(props) {
   const [query, setQuery] = useState({status: null});
   const [error, setError] = useState({status: null, code: null});
   const [isClaimed, setIsClaimed] = useState({productionMain: false, production: false});
-  const [isMob, setIsMobile] = useState(null);
 
   const connectedAddressRef = useRef(connectedAddress);
   const connectedChainRef = useRef(connectedChain);
@@ -51,7 +50,6 @@ export default function Switch(props) {
   }, [connectedChain]);
 
   useEffect(() => {
-    setIsMobile(props.isMobile);
     if (props.currentConnection){
       setProviderInstance(props.currentConnection.providerInstance);
       setConnectedAddress(props.currentConnection.connectedAddress);
