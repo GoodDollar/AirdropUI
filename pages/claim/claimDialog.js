@@ -49,22 +49,20 @@ export default function ClaimDialog(props) {
   }, [query]);
   
   useEffect(() => {
-    if (initClaim == 'init'){
-      setInitClaim("loaded");
-      let gRep = props.proofData.reputationInWei / 1e18;
-      setGRep(gRep);
-      setClaimAddress(props.proofData.addr);
-    }
+    let gRep = props.proofData.reputationInWei / 1e18;
+    setGRep(gRep);
+    setClaimAddress(props.proofData.addr);
     if (props.proofData.addr !== connectedAddress){
+      setCurrentStep({step: "step1", message: steps.step1});
       setCurrentConnection(null);
       setConnectedAddress(null);
     }
-  }, [setInitClaim, props]);
+  }, [props]);
 
   const handleClose = useCallback(() => {
     if (query.status == 'disconnect'){
       setQuery({status: 'init'});
-      setInitClaim('init');
+      setInitClaim('disconnected');
     }
     onClose();
   }, [onClose, query]);
@@ -74,6 +72,7 @@ export default function ClaimDialog(props) {
       if (currentConnection.providerName == "MM" || currentConnection.providerName == "WC") {
         let supportedChains = ['0x7a', '0x1', 1, 122].join(':');
         currentConnection.providerInstance.currentProvider.on('chainChanged', (chainId) => {
+          setCurrentStep({step: 'step2'});
           if (supportedChains.indexOf(chainId) !== -1) {
             const updateConnection = {
               providerName: currentConnection.providerName,
@@ -104,6 +103,7 @@ export default function ClaimDialog(props) {
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           if (res.length === 0 || res[0] !== claimAddress) {
             let status = {status: 'disconnect', code: 313};
+            setCurrentStep({step: 'step1'});
             setQuery(status);
             setProviderName(null);
             setConnectedAddress(null);
@@ -112,12 +112,14 @@ export default function ClaimDialog(props) {
         });
 
         currentConnection.providerInstance.currentProvider.on("disconnect", (code, res) =>{
-          // code 1000 == disconnect
+          // code 1000 == disconnect'
+          console.log("wait what?");
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           let status = {status: 'disconnect', code: 313};
+          setCurrentStep({step: 'step1'});
           setQuery(status);
           setProviderName(null);
-          setCurrentConnection(null);
+          setCurrentConnection(null); 
           setConnectedAddress(null);
         });
       }
@@ -128,6 +130,7 @@ export default function ClaimDialog(props) {
   const connectionHandler = useCallback(async(res) => {
     if (res.status == 'error'){
       // TODO: Not showing disconnect message properly, shows cached old error message
+      setCurrentStep({step: 'step1'});
       setCurrentConnection(null);
       setQuery(res);
       setConnectedAddress(null);
@@ -158,7 +161,7 @@ export default function ClaimDialog(props) {
   }, []);
 
   return (
-    <Dialog onClose={handleClose} open={open} sx={{margin: isMobile ? 2 : 4}}>
+    <Dialog onClose={handleClose} open={open}>
       <DialogContent 
         className="dialogContentContainer" 
         sx={{
@@ -167,7 +170,8 @@ export default function ClaimDialog(props) {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          borderLeft: "11px solid #1976d2"
+          borderLeft: "11px solid #1976d2",
+          padding: isMobile ? "20px 8px" : "20px 24px"
         }}>
 
           <MobileInfo isMobile={isMobile} providerName={providerName} initClaim={initClaim}/>
@@ -176,8 +180,11 @@ export default function ClaimDialog(props) {
         </DialogTitle>
         {
           currentStep.step == 'step4' ? 
-            <Box>
-              <Typography variant="span" sx={{fontStyle: "italic", mt: 1, pt:0, width: "80%"}}>
+            <Box sx={{textAlign:"center"}}>
+              <Typography variant="span" sx={{fontStyle: "italic", 
+                                              mt: 1, 
+                                              pt:0, 
+                                              width: "80%"}}>
                 You're claiming {gRep} GOOD!
               </Typography>
             </Box> : null

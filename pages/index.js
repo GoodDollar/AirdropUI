@@ -87,6 +87,13 @@ const theme = createTheme({
     ]
   },
   components: {
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          margin: "8px"
+        }
+      }
+    },
     MuiCssBaseline: {
       styleOverrides: `
       @font-face {
