@@ -1,5 +1,4 @@
 // import Link from 'next/link'
-
 import React, { useState, useCallback } from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
@@ -25,6 +24,9 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+
+import { formatAddress } from "../lib/connect.serv";
+import isMobileHook from "../lib/isMobile";
 
 // Claim
 import ClaimDialog from "./claim/claimDialog";
@@ -74,9 +76,43 @@ function Copyright(props) {
   );
 }
 
-const theme = createTheme();
+const theme = createTheme({
+  typography: {
+    fontFamily: [
+      'sans-serif',
+      'Arial', 
+      'Helvetica',
+      'Roboto', 
+      'Inter',
+    ]
+  },
+  components: {
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          margin: "8px"
+        }
+      }
+    },
+    MuiCssBaseline: {
+      styleOverrides: `
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-display: swap;
+        font-weight: 400;
+        src: url('/fonts/inter_converted/Inter-Regular.eot');
+        src: url('/fonts/inter_converted/Inter-Regular.eot?#iefix') format('embedded-opentype'),
+            url('/fonts/inter_converted/Inter-Regular.woff2') format('woff2'),
+            url('/fonts/inter_converted/Inter-Regular.woff') format('woff'),
+            url('/fonts/inter_converted/Inter-Regular.ttf') format('truetype'),
+            url('/fonts/inter_converted/Inter-Regular.svg#Inter-Regular') format('svg');
+      }`
+    }
+  }
+});
 
-const AirdropData = ({ hexProof, proofIndex, addr, reputationInWei }) => {
+const AirdropData = ({ hexProof, proofIndex, addr, reputationInWei, isMob }) => {
   return (
     <Box>
       <Paper>
@@ -87,7 +123,7 @@ const AirdropData = ({ hexProof, proofIndex, addr, reputationInWei }) => {
                 <AccountCircleOutlinedIcon />
               </Avatar>
             </ListItemAvatar>
-            <ListItemText primary={addr} />
+            <ListItemText primary={ addr && isMob ? formatAddress(addr) : addr} />
           </ListItem>
           <ListItem>
             <ListItemAvatar>
@@ -156,6 +192,8 @@ export default function SignIn() {
   const handleErrorClose = useCallback((value) => {
     setErrorOpen(false);
   }, [setErrorOpen]);
+
+  const isMobile = isMobileHook();
 
   return (
     <ThemeProvider theme={theme}>
@@ -226,7 +264,7 @@ export default function SignIn() {
               </Grid>
             </Grid>
           </Paper>
-          {data ? <AirdropData {...data} /> : null}
+          {data ? <AirdropData {...data} isMob={isMobile} /> : null}
           <Box
             component="form"
             onSubmit={handleSubmit}

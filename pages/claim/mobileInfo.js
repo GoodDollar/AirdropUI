@@ -54,7 +54,8 @@ export default function MobileInfo(props) {
           color: "red",
           float: "right",
           alignSelf: "flex-end",
-          position:"absolute"
+          position:"absolute",
+          right: "16px"
     }}>
     <Button sx={{
       textTransform: "lowercase",

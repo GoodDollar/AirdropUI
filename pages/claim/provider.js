@@ -5,7 +5,6 @@ import Typography from "@mui/material/Typography";
 
 import WalletConnectProvider from "@walletconnect/web3-provider";
 const Web3 = require('web3');
-// const infuraConfig = require('../../private/infura.config.js');
 let EthApi = process.env.NEXT_PUBLIC_ETH_HTTPS,
     EthId = process.env.NEXT_PUBLIC_ETH_ID,
     FuseApi = process.env.NEXT_PUBLIC_FUSE_HTTPS;

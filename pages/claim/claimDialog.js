@@ -1,7 +1,11 @@
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
-import React, { useState, useEffect, useRef, useCallback} from 'react';
+import Box from "@mui/material/Box";
+import React, { useState, useEffect, useCallback} from 'react';
+import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
 
 import Provider from './provider.js';
 import Switch from './switch.js';
@@ -18,29 +22,47 @@ import isMobileHook from '../../lib/isMobile';
 export default function ClaimDialog(props) {
   const [claimAddress, setClaimAddress] = useState(null);
   const [connectedAddress, setConnectedAddress] = useState(null);
-  const [initClaim] = useState('init');
+  const [initClaim, setInitClaim] = useState('init');
   const {onClose, open} = props;
   const [query, setQuery] = useState({status: 'init'});
   const [gRep, setGRep] = useState(null);
   const [currentConnection, setCurrentConnection] = useState(null);
   const [providerEvents, setProviderEvents] = useState({status: null});
   const [providerName, setProviderName] = useState('init');
+  const [currentStep, setCurrentStep] = useState({step: 'step1', message: ''});
 
   const isMobile = isMobileHook();
+
+  let steps = {
+    step1: 'Step 1/4: Connect eligible address',
+    step2: 'Step 2/4: Confirm airdrop network',
+    step3: 'Step 3/4: Confirm airdrop recipient',
+    step4: 'Step 4/4: Confirm and claim'
+  }
+
+  useEffect(() => {
+    for (const [step, message] of Object.entries(steps)) {
+      if (currentStep.step == step){
+        setCurrentStep({step: step, message: message});
+      }
+    }
+  }, [query]);
   
   useEffect(() => {
     let gRep = props.proofData.reputationInWei / 1e18;
     setGRep(gRep);
     setClaimAddress(props.proofData.addr);
     if (props.proofData.addr !== connectedAddress){
+      setCurrentStep({step: "step1", message: steps.step1});
       setCurrentConnection(null);
       setConnectedAddress(null);
     }
-  }, [initClaim, props]);
+  }, [props]);
 
   const handleClose = useCallback(() => {
     if (query.status == 'disconnect'){
       setQuery({status: 'init'});
+      setInitClaim('disconnected');
     }
     onClose();
   }, [onClose, query]);
@@ -50,11 +72,12 @@ export default function ClaimDialog(props) {
       if (currentConnection.providerName == "MM" || currentConnection.providerName == "WC") {
         let supportedChains = ['0x7a', '0x1', 1, 122].join(':');
         currentConnection.providerInstance.currentProvider.on('chainChanged', (chainId) => {
+          setCurrentStep({step: 'step2'});
           if (supportedChains.indexOf(chainId) !== -1) {
             const updateConnection = {
               providerName: currentConnection.providerName,
               connectedAddress: currentConnection.connectedAddress,
-              connectedChain: (chainId == "0x7a" ? "Fuse": "Ethereum Mainnet"),
+              connectedChain: (chainId == "0x7a" ? "Fuse": "Ethereum"),
               chainId: (chainId == "0x7a" ? 122 : 1),
               providerInstance: currentConnection.providerInstance
             }
@@ -74,11 +97,13 @@ export default function ClaimDialog(props) {
             setQuery({status: 'connected'});
           }
         });
+
         currentConnection.providerInstance.currentProvider.on('accountsChanged', (res) => {
           console.log('disconnecting . . .');
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           if (res.length === 0 || res[0] !== claimAddress) {
             let status = {status: 'disconnect', code: 313};
+            setCurrentStep({step: 'step1'});
             setQuery(status);
             setProviderName(null);
             setConnectedAddress(null);
@@ -87,12 +112,14 @@ export default function ClaimDialog(props) {
         });
 
         currentConnection.providerInstance.currentProvider.on("disconnect", (code, res) =>{
-          // code 1000 == disconnect
+          // code 1000 == disconnect'
+          console.log("wait what?");
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           let status = {status: 'disconnect', code: 313};
+          setCurrentStep({step: 'step1'});
           setQuery(status);
           setProviderName(null);
-          setCurrentConnection(null);
+          setCurrentConnection(null); 
           setConnectedAddress(null);
         });
       }
@@ -103,11 +130,13 @@ export default function ClaimDialog(props) {
   const connectionHandler = useCallback(async(res) => {
     if (res.status == 'error'){
       // TODO: Not showing disconnect message properly, shows cached old error message
+      setCurrentStep({step: 'step1'});
       setCurrentConnection(null);
       setQuery(res);
       setConnectedAddress(null);
       setProviderName('init');
-    } else {      
+    } else {
+      setCurrentStep({step: 'step2'});      
       setCurrentConnection(res);
       setProviderEvents({status: 'init'});
       setConnectedAddress(res.connectedAddress);
@@ -117,12 +146,19 @@ export default function ClaimDialog(props) {
   },[setQuery, setProviderName, setConnectedAddress, setProviderEvents, setCurrentConnection]);
 
   const getReputation = useCallback(() => {
+    setCurrentStep({step: 'step3'});
     setQuery({status: 'claiming'});
   }, [setQuery]);
 
   const backToSwitch = useCallback(() => {
+    setCurrentStep({step: 'step2'});
     setQuery({status: 'connected'});
   }, [setQuery]);
+
+  const updateStep = useCallback(async(step) => {
+    setCurrentStep({step: step});
+    setQuery({status: 'claiming'});
+  }, []);
 
   return (
     <Dialog onClose={handleClose} open={open}>
@@ -134,16 +170,40 @@ export default function ClaimDialog(props) {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          // borderLeft: "11px solid #1976d2"
+          borderLeft: "11px solid #1976d2",
+          padding: isMobile ? "20px 8px" : "20px 24px"
         }}>
 
           <MobileInfo isMobile={isMobile} providerName={providerName} initClaim={initClaim}/>
-        
-        <DialogTitle sx={{fontStyle:"italic", mt: 1, pt:0, width: "80%"}}>You have {gRep} GOOD Tokens to claim!</DialogTitle>
+        <DialogTitle sx={{fontStyle:"italic", mt: 1, pt:0, width: "80%", fontSize: "1.10rem"}}>
+          {currentStep.message}
+        </DialogTitle>
+        {
+          currentStep.step == 'step4' ? 
+            <Box sx={{textAlign:"center"}}>
+              <Typography variant="span" sx={{fontStyle: "italic", 
+                                              mt: 1, 
+                                              pt:0, 
+                                              width: "80%"}}>
+                You're claiming {gRep} GOOD!
+              </Typography>
+            </Box> : null
+        }
         { !connectedAddress || query.status === 'disconnect' ?
-            <Provider claimAddress={claimAddress} 
-                      setConnection={connectionHandler}
-                      query={query} />
+          <Box>
+            <List sx={{display: "flex", flexDirection:"column"}}>
+              <ListItem sx={{justifyContent: "center", alignItems: "center"}}>
+                <Typography variant="span" sx={{fontStyle: "italic", mt: 1, pt:0, width: "80%"}}>
+                  You have {gRep} GOOD to claim!
+                </Typography>
+              </ListItem>
+              <ListItem sx={{justifyContent: "center", alignItems: "center"}}>
+                <Provider claimAddress={claimAddress} 
+                        setConnection={connectionHandler}
+                        query={query} />
+              </ListItem>
+            </List>
+          </Box>
           :
           query.status === 'connected' ?
             <Switch proofData={props.proofData} 
@@ -154,6 +214,7 @@ export default function ClaimDialog(props) {
           query.status !== 'init' ?
             <Claim proofData={props.proofData} currentConnection={currentConnection}
                    toSwitch={backToSwitch}
+                   updateStep={updateStep}
                    isMobile={isMobile} />
           :
           null
