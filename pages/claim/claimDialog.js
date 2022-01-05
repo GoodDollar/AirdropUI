@@ -113,7 +113,6 @@ export default function ClaimDialog(props) {
 
         currentConnection.providerInstance.currentProvider.on("disconnect", (code, res) =>{
           // code 1000 == disconnect'
-          console.log("wait what?");
           currentConnection.providerInstance.currentProvider.removeAllListeners();
           let status = {status: 'disconnect', code: 313};
           setCurrentStep({step: 'step1'});

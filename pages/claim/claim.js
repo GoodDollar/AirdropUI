@@ -226,7 +226,10 @@ export default function Claim(props){
                                                   height: "50px",
                                                   pt: 0.5
                                                   }}>
-                  {repRecipientFormat}
+                  {
+                    repRecipientFormat ? repRecipientFormat : 
+                    <CircularProgress color="secondary" />
+                  }
                 </Typography>
               </ListItem>
               <ListItem sx={{margin: 0, padding: 0}}>
