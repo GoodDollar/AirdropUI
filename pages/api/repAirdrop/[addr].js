@@ -6,7 +6,7 @@ import fs from "fs";
 import { tmpdir } from "os";
 
 const DEBUG = false;
-const airdropCID = "QmVqQrssaShua8oERVmudrroPaLb1UvghymTY9x2SoF7Vi";
+const airdropCID = "QmY4FMfQ5S5qB5TUNMYdsDfDRNb1HkNnr4YAzMm8dHj7wh";
 const airdropUrl = `https://ipfs.io/ipfs/${airdropCID}/airdrop.json`;
 let merkleTree, treeDB;
 
