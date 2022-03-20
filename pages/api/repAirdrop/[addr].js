@@ -4,6 +4,26 @@ import MerkleTree, {
 } from "merkle-tree-solidity";
 import fs from "fs";
 import { tmpdir } from "os";
+import Cors from 'cors'
+
+// Initializing the cors middleware
+const cors = Cors({
+  origin: false
+})
+
+// Helper method to wait for a middleware to execute before continuing
+// And to throw an error when an error happens in a middleware
+function runMiddleware(req, res, fn) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result)
+      }
+
+      return resolve(result)
+    })
+  })
+}
 
 const DEBUG = false;
 const airdropCID = "QmY4FMfQ5S5qB5TUNMYdsDfDRNb1HkNnr4YAzMm8dHj7wh";
@@ -53,10 +73,15 @@ const buildTree = async () => {
 };
 let ready = false;
 buildTree().then((_) => (ready = true));
+
 export default async function handler(req, res) {
+  // Run the middleware
+  await runMiddleware(req, res, cors)
+  
   if (!ready) {
     return res.status(400).json({ error: `warming tree cache` });
   }
+  
   let { addr } = req.query;
   if (DEBUG) {
     const totalAddrs = Object.keys(treeDB).length;
