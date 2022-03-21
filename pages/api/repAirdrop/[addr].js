@@ -28,7 +28,7 @@ function runMiddleware(req, res, fn) {
 const DEBUG = false;
 const airdropCID = "QmY4FMfQ5S5qB5TUNMYdsDfDRNb1HkNnr4YAzMm8dHj7wh";
 const airdropUrl = `https://ipfs.io/ipfs/${airdropCID}/airdrop.json`;
-let merkleTree, treeDB;
+let merkleTree, treeDB, merkleRootHash;
 
 const buildTree = async () => {
   if (merkleTree) return;
@@ -46,6 +46,7 @@ const buildTree = async () => {
   });
 
   const { treeData, merkleRoot } = jsonFile;
+  merkleRootHash = merkleRoot
 
   treeDB = treeData;
   let entries = Object.entries(treeData);
@@ -108,5 +109,5 @@ export default async function handler(req, res) {
   }
   const hexProof = proof.map((_) => "0x" + _.toString("hex"));
 
-  res.json({ addr, hexProof, proofIndex, reputationInWei: addrData.rep, merkleRoot });
+  res.json({ addr, hexProof, proofIndex, reputationInWei: addrData.rep, merkleRootHash });
 }
