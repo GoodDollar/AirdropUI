@@ -108,5 +108,5 @@ export default async function handler(req, res) {
   }
   const hexProof = proof.map((_) => "0x" + _.toString("hex"));
 
-  res.json({ addr, hexProof, proofIndex, reputationInWei: addrData.rep });
+  res.json({ addr, hexProof, proofIndex, reputationInWei: addrData.rep, merkleRoot });
 }
