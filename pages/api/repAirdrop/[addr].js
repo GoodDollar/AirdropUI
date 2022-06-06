@@ -27,7 +27,7 @@ function runMiddleware(req, res, fn) {
 
 const DEBUG = false;
 const airdropCID = "bafybeifo3suusbptvmxbexx4iv4k33s6sfxoet5myjwrsexike7cz7i3fe";
-const airdropUrl = `https://ipfs.io/ipfs/${airdropCID}/airdrop.json`;
+const airdropUrl = `https://dweb.link/ipfs/${airdropCID}/airdrop.json`;
 let merkleTree, treeDB, merkleRootHash;
 
 const buildTree = async () => {
