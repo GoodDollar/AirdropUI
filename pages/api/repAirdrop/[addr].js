@@ -26,7 +26,7 @@ function runMiddleware(req, res, fn) {
 }
 
 const DEBUG = false;
-const airdropCID = "QmY4FMfQ5S5qB5TUNMYdsDfDRNb1HkNnr4YAzMm8dHj7wh";
+const airdropCID = "bafybeifo3suusbptvmxbexx4iv4k33s6sfxoet5myjwrsexike7cz7i3fe";
 const airdropUrl = `https://ipfs.io/ipfs/${airdropCID}/airdrop.json`;
 let merkleTree, treeDB, merkleRootHash;
 
@@ -39,12 +39,16 @@ const buildTree = async () => {
       fs.readFileSync(tmpdir + "/" + airdropCID).toString()
     );
   }
-  jsonFile = await fetch(airdropUrl).then((_) => {
-    const result = _.json();
-    fs.writeFileSync(tmpdir + "/" + airdropCID, JSON.stringify(result));
-    return result;
-  });
+  else {
+    console.log('fetching file from:',airdropUrl);
+    jsonFile = await fetch(airdropUrl).then((_) => {
+      const result = _.json();
+      fs.writeFileSync(tmpdir + "/" + airdropCID, JSON.stringify(result));
+      return result;
+    });
+  }
 
+  console.log("got json file, building tree...");
   const { treeData, merkleRoot } = jsonFile;
   merkleRootHash = merkleRoot
 
