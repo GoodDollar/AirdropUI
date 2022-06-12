@@ -5,6 +5,7 @@ import MerkleTree, {
 import fs from "fs";
 import { tmpdir } from "os";
 import Cors from 'cors'
+import AirdropFile from '../../../assets/airdrop.json'
 
 // Initializing the cors middleware
 const cors = Cors({
@@ -32,21 +33,21 @@ let merkleTree, treeDB, merkleRootHash;
 
 const buildTree = async () => {
   if (merkleTree) return;
-  let jsonFile;
-  if (fs.existsSync(tmpdir + "/" + airdropCID)) {
-    console.log("getting tree from disk cache");
-    jsonFile = JSON.parse(
-      fs.readFileSync(tmpdir + "/" + airdropCID).toString()
-    );
-  }
-  else {
-    console.log('fetching file from:',airdropUrl);
-    jsonFile = await fetch(airdropUrl).then((_) => {
-      const result = _.json();
-      fs.writeFileSync(tmpdir + "/" + airdropCID, JSON.stringify(result));
-      return result;
-    });
-  }
+  let jsonFile = AirdropFile;
+  // if (fs.existsSync(tmpdir + "/" + airdropCID)) {
+  //   console.log("getting tree from disk cache");
+  //   jsonFile = JSON.parse(
+  //     fs.readFileSync(tmpdir + "/" + airdropCID).toString()
+  //   );
+  // }
+  // else {
+  //   console.log('fetching file from:',airdropUrl);
+  //   jsonFile = await fetch(airdropUrl).then((_) => {
+  //     const result = _.json();
+  //     fs.writeFileSync(tmpdir + "/" + airdropCID, JSON.stringify(result));
+  //     return result;
+  //   });
+  // }
 
   console.log("got json file, building tree...");
   const { treeData, merkleRoot } = jsonFile;
