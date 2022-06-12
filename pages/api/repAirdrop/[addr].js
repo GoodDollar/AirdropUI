@@ -5,8 +5,6 @@ import MerkleTree, {
 import fs from "fs";
 import { tmpdir } from "os";
 import Cors from 'cors'
-import AirdropFile from '../../../assets/airdrop.json'
-
 // Initializing the cors middleware
 const cors = Cors({
   origin: '*' //allow any
@@ -33,7 +31,11 @@ let merkleTree, treeDB, merkleRootHash;
 
 const buildTree = async () => {
   if (merkleTree) return;
-  let jsonFile = AirdropFile;
+  console.log("getting tree from disk cache");
+  let jsonFile = JSON.parse(
+      fs.readFileSync("./assets/airdrop.json")
+  );
+
   // if (fs.existsSync(tmpdir + "/" + airdropCID)) {
   //   console.log("getting tree from disk cache");
   //   jsonFile = JSON.parse(
