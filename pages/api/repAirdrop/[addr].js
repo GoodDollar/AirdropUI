@@ -1,7 +1,5 @@
-import MerkleTree, {
-  checkProof,
-  checkProofOrdered
-} from "merkle-tree-solidity";
+import { MerkleTree } from "merkletreejs";
+import { keccak256 } from "web3-utils"
 import fs from "fs";
 import { tmpdir } from "os";
 import Cors from 'cors'
@@ -69,9 +67,9 @@ const buildTree = async () => {
     elements[0],
     entries[0]
   );
-  merkleTree = new MerkleTree(elements, true);
+  merkleTree = new MerkleTree(elements, keccak256);
 
-  const calcMerkleRoot = merkleTree.getRoot().toString("hex");
+  const calcMerkleRoot = merkleTree.getHexRoot()
   console.log("merkleroots:", {
     fromFile: merkleRoot,
     calculated: calcMerkleRoot
@@ -103,18 +101,19 @@ export default async function handler(req, res) {
       .json({ error: `address ${addr} does not exists in tree` });
   }
 
-  const proofFor = Buffer.from(addrData.hash.slice(2), "hex");
+  const proofFor = addrData.hash
 
-  const proof = merkleTree.getProof(proofFor);
+  const proof = merkleTree.getPositionalHexProof(proofFor)
   const proofIndex = addrData.index + 1; //proof indexes start from 1
 
   if (DEBUG) {
     console.log(
       "checkProof:",
-      checkProofOrdered(proof, merkleTree.getRoot(), proofFor, proofIndex)
+      merkleTree.verify(proof, proofFor,merkleRootHash),
+      {proof}
     );
   }
-  const hexProof = proof.map((_) => "0x" + _.toString("hex"));
-
-  res.json({ addr, hexProof, proofIndex, reputationInWei: addrData.rep, merkleRootHash });
+  const isRightNode = proof.map(_ => !!_[0]);
+  const hexProof = proof.map(_ => _[1]);
+  res.json({ addr, hexProof,isRightNode, proofIndex, reputationInWei: addrData.rep, merkleRootHash });
 }

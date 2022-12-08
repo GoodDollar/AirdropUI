@@ -112,7 +112,9 @@ const theme = createTheme({
   }
 });
 
-const AirdropData = ({ hexProof, proofIndex, addr, reputationInWei, isMob }) => {
+const AirdropData = ({ hexProof,isRightNode, proofIndex, addr, reputationInWei, isMob }) => {
+  const proof = `"${hexProof.join('","')}"`
+  const positions = `"${isRightNode.join('","')}"`
   return (
     <Box>
       <Paper>
@@ -150,10 +152,31 @@ const AirdropData = ({ hexProof, proofIndex, addr, reputationInWei, isMob }) => 
                   display: "inline-block"
                 }}
               >
-                Proof: {hexProof}
+                Proof: {proof}"
               </div>
             </ListItemText>
-            <CopyButton text={hexProof} />
+            <CopyButton text={proof} />
+          </ListItem>
+          <ListItem>
+            <ListItemAvatar>
+              <Avatar>
+                <AdminPanelSettingsOutlinedIcon />
+              </Avatar>
+            </ListItemAvatar>
+            <ListItemText>
+              <div
+                style={{
+                  width: "200px",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  display: "inline-block"
+                }}
+              >
+                Positions: {positions}"
+              </div>
+            </ListItemText>
+            <CopyButton text={positions} />
           </ListItem>
           <ListItem>
             <ListItemAvatar>
