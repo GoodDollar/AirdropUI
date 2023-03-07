@@ -25,7 +25,7 @@ function runMiddleware(req, res, fn) {
 
 const DEBUG = false;
 const airdropCID = "bafybeifo3suusbptvmxbexx4iv4k33s6sfxoet5myjwrsexike7cz7i3fe";
-const airdropUrl = `https://w3s.link/ipfs/${airdropCID}/airdrop.json`;
+const airdropUrl = `https://${airdropCID}.ipfs.dweb.link/airdrop.json`;
 let merkleTree, treeDB, merkleRootHash;
 
 const buildTree = async () => {
@@ -35,9 +35,7 @@ const buildTree = async () => {
   if(process.env.NEXT_PUBLIC_ENABLE_IPFS !== 'true' && fs.existsSync(filepath))
   {
     console.log("getting tree from local storage");
-    const content = fs.readFileSync(filepath).toString()
-    console.log("got local file content:", content)
-    let jsonFile = JSON.parse(content)
+    jsonFile = JSON.parse(fs.readFileSync(filepath).toString())
   }
   else if (fs.existsSync(tmpdir() + "/" + airdropCID)) {
     console.log("getting tree from disk cache", {tmpdir:tmpdir()});
