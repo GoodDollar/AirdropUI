@@ -31,7 +31,7 @@ let merkleTree, treeDB, merkleRootHash;
 const buildTree = async () => {
   if (merkleTree) return;
   let jsonFile
-  if(!process.env.NEXT_PUBLIC_ENABLE_IPFS)
+  if(process.env.NEXT_PUBLIC_ENABLE_IPFS !== 'true')
   {
     console.log("getting tree from local storage");
     const filepath = path.join(process.cwd(), 'assets', 'airdrop.json');
@@ -40,8 +40,7 @@ const buildTree = async () => {
     );
 
   }
-
-  if (fs.existsSync(tmpdir() + "/" + airdropCID)) {
+  else if (fs.existsSync(tmpdir() + "/" + airdropCID)) {
     console.log("getting tree from disk cache", {tmpdir:tmpdir()});
     jsonFile = JSON.parse(
       fs.readFileSync(tmpdir() + "/" + airdropCID).toString()
