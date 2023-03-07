@@ -11,7 +11,7 @@ import isMobileHook from '../../lib/isMobile';
  * @returns 
  */
 export default function IneligibleAddress(props) {
-  const [sorryMessage] = useState('Sorry, this address does not have any GOOD tokens to claim.');
+  const [sorryMessage] = useState(props.error ?? 'Sorry, this address does not have any GOOD tokens to claim.');
   const {onClose, open} = props;
   const [onInit] = useState("init");
 

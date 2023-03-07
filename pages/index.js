@@ -287,7 +287,7 @@ export default function SignIn() {
               </Grid>
             </Grid>
           </Paper>
-          {data ? <AirdropData {...data} isMob={isMobile} /> : null}
+          {data && !data.error ? <AirdropData {...data} isMob={isMobile} /> : null}
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -333,7 +333,7 @@ export default function SignIn() {
           { data ? 
             data.error ?
               <IneligibleAddress open={diaNoGood} 
-                                  onClose={handleErrorClose}></IneligibleAddress>
+                                  onClose={handleErrorClose} error={data.error}></IneligibleAddress>
             :
             data.addr ?
             // the claim dialog 

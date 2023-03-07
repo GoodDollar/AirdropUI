@@ -2,7 +2,8 @@ import { MerkleTree } from "merkletreejs";
 import { keccak256 } from "web3-utils"
 import fs from "fs";
 import { tmpdir } from "os";
-import Cors from 'cors'
+import Cors from 'cors';
+import path from 'path';
 // Initializing the cors middleware
 const cors = Cors({
   origin: '*' //allow any
@@ -33,24 +34,24 @@ const buildTree = async () => {
   if(!process.env.NEXT_PUBLIC_ENABLE_IPFS)
   {
     console.log("getting tree from local storage");
-
+    const filepath = path.join(process.cwd(), 'assets', 'airdrop.json');
     let jsonFile = JSON.parse(
-        fs.readFileSync("./assets/airdrop.json")
+        fs.readFileSync(filepath)
     );
 
   }
 
-  if (fs.existsSync(tmpdir + "/" + airdropCID)) {
-    console.log("getting tree from disk cache");
+  if (fs.existsSync(tmpdir() + "/" + airdropCID)) {
+    console.log("getting tree from disk cache", {tmpdir:tmpdir()});
     jsonFile = JSON.parse(
-      fs.readFileSync(tmpdir + "/" + airdropCID).toString()
+      fs.readFileSync(tmpdir() + "/" + airdropCID).toString()
     );
   }
   else {
     console.log('fetching file from:',airdropUrl);
-    jsonFile = await fetch(airdropUrl).then((_) => {
-      const result = _.json();
-      fs.writeFileSync(tmpdir + "/" + airdropCID, JSON.stringify(result));
+    jsonFile = await fetch(airdropUrl).then(async (_) => {
+      const result = await _.json();
+      fs.writeFileSync(tmpdir() + "/" + airdropCID, JSON.stringify(result));
       return result;
     });
   }
