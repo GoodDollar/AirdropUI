@@ -38,9 +38,6 @@ const buildTree = async () => {
     const content = fs.readFileSync(filepath).toString()
     console.log("got local file content:", content)
     let jsonFile = JSON.parse(content)
-        
-    );
-
   }
   else if (fs.existsSync(tmpdir() + "/" + airdropCID)) {
     console.log("getting tree from disk cache", {tmpdir:tmpdir()});
