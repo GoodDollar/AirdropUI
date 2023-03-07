@@ -35,8 +35,10 @@ const buildTree = async () => {
   if(process.env.NEXT_PUBLIC_ENABLE_IPFS !== 'true' && fs.existsSync(filepath))
   {
     console.log("getting tree from local storage");
-    let jsonFile = JSON.parse(
-        fs.readFileSync(filepath).toString()
+    const content = fs.readFileSync(filepath).toString()
+    console.log("got local file content:", content)
+    let jsonFile = JSON.parse(content)
+        
     );
 
   }
