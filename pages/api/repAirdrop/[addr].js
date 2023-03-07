@@ -36,7 +36,7 @@ const buildTree = async () => {
   {
     console.log("getting tree from local storage");
     let jsonFile = JSON.parse(
-        fs.readFileSync(filepath)
+        fs.readFileSync(filepath).toString()
     );
 
   }
